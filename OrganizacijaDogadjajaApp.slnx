@@ -1,3 +1,5 @@
 <Solution>
+  <Project Path="OrganizacijaDogadjajaApp.DogadjajiAPI01/OrganizacijaDogadjajaApp.DogadjajiAPI.csproj" Id="6eb196cb-3060-4c24-842c-6322f1c48b73" />
+  <Project Path="OrganizacijaDogadjajaApp.DTO/OrganizacijaDogadjajaApp.DTO.csproj" Id="3dd4a807-a0d9-44bf-abbe-3249ab7f3a4a" />
   <Project Path="OrganizacijaDogadjajaApp/OrganizacijaDogadjajaApp.csproj" />
 </Solution>

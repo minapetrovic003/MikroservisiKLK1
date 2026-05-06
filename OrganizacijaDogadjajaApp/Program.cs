@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using OrganizacijaDogadjajaApp.Data;
+using OrganizacijaDogadjajaApp.Patterns;
 
 namespace OrganizacijaDogadjajaApp
 {
@@ -9,16 +10,35 @@ namespace OrganizacijaDogadjajaApp
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Dodavanje servisa (MVC)
+            builder.Services.AddSingleton<CircuitBreaker>(sp =>
+                new CircuitBreaker(3, TimeSpan.FromSeconds(10))
+            );
+
+            builder.Services.AddHttpClient("DogadjajiAPI", (client) =>
+            {
+                client.Timeout = TimeSpan.FromSeconds(10);
+                client.BaseAddress = new Uri(builder.Configuration.GetValue<string>("DogadjajiAPIEndpoint")!);
+            });
+
+            builder.Services.AddHttpClient("PredavanjaAPI", (client) =>
+            {
+                client.Timeout = TimeSpan.FromSeconds(10);
+                client.BaseAddress = new Uri(builder.Configuration.GetValue<string>("PredavanjaAPIEndpoint")!);
+            });
+
+            builder.Services.AddHttpClient("UcesniciAPI", (client) =>
+            {
+                client.Timeout = TimeSpan.FromSeconds(10);
+                client.BaseAddress = new Uri(builder.Configuration.GetValue<string>("UcesniciAPIEndpoint")!);
+            });
+
             builder.Services.AddControllersWithViews();
 
-            // Dodavanje baze (DbContext)
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             var app = builder.Build();
 
-            // Konfiguracija pipeline-a
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");
@@ -27,12 +47,9 @@ namespace OrganizacijaDogadjajaApp
 
             app.UseHttpsRedirection();
             app.UseRouting();
-
-            app.UseStaticFiles(); // za css, js, slike
-
+            app.UseStaticFiles();
             app.UseAuthorization();
 
-            // Ruta za kontrolere
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");

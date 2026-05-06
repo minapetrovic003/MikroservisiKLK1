@@ -1,151 +1,174 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using OrganizacijaDogadjajaApp.Data;
-using OrganizacijaDogadjajaApp.Models;
-using Microsoft.AspNetCore.Mvc.Rendering;
+using OrganizacijaDogadjajaApp.DTO;
+using OrganizacijaDogadjajaApp.Patterns;
+using Polly;
 
 namespace OrganizacijaDogadjajaApp.Controllers
 {
     public class DogadjajsController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly CircuitBreaker _circuitBreaker;
 
-        public DogadjajsController(ApplicationDbContext context)
+        public DogadjajsController(IHttpClientFactory httpClientFactory, CircuitBreaker circuitBreaker)
         {
-            _context = context;
+            _httpClientFactory = httpClientFactory;
+            _circuitBreaker = circuitBreaker;
         }
 
-        // GET: Dogadjajs
+        // GET: Dogadjajs — koristi RETRY + TIMEOUT
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.Dogadjaji.Include(d => d.Lokacija).Include(d => d.TipDogadjaja);
-            return View(await applicationDbContext.ToListAsync());
+            var dogadjajiClient = _httpClientFactory.CreateClient("DogadjajiAPI");
+
+            try
+            {
+                HttpResponseMessage? httpResponseMessage = null;
+
+                var retryPolicy = Policy.Handle<HttpRequestException>()
+                    .WaitAndRetryAsync(2, attempt => TimeSpan.FromMilliseconds(250));
+
+                httpResponseMessage = await retryPolicy.ExecuteAsync(async () =>
+                {
+                    httpResponseMessage = await dogadjajiClient.GetAsync("/Dogadjaji");
+                    httpResponseMessage.EnsureSuccessStatusCode();
+                    return httpResponseMessage;
+                });
+
+                var dogadjaji = await httpResponseMessage.Content.ReadFromJsonAsync<List<DogadjajDTO>>();
+
+                return View(dogadjaji);
+            }
+            catch (TaskCanceledException)
+            {
+                ViewBag.ExceptionMessage = "Servis za dogadjaje ne odgovara — timeout.";
+                return View(new List<DogadjajDTO>());
+            }
+            catch (HttpRequestException)
+            {
+                ViewBag.ExceptionMessage = "Servis za dogadjaje nedostupan — iscrpljeni pokusaji.";
+                return View(new List<DogadjajDTO>());
+            }
         }
 
-        // GET: Dogadjajs/Details/5
+        // GET: Dogadjajs/Details/5 — koristi CIRCUIT BREAKER
         public async Task<IActionResult> Details(Guid? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
-            var dogadjaj = await _context.Dogadjaji
-                .Include(d => d.Lokacija)
-                .Include(d => d.TipDogadjaja)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (dogadjaj == null)
+            var dogadjajiClient = _httpClientFactory.CreateClient("DogadjajiAPI");
+
+            try
             {
-                return NotFound();
-            }
+                var responseMessage = await _circuitBreaker.ExecuteAsync(async () =>
+                {
+                    var response = await dogadjajiClient.GetAsync($"/Dogadjaji/{id}");
+                    response.EnsureSuccessStatusCode();
+                    return response;
+                });
 
-            return View(dogadjaj);
+                var dogadjaj = await responseMessage.Content.ReadFromJsonAsync<DogadjajDTO>();
+
+                if (dogadjaj == null)
+                    return NotFound();
+
+                return View(dogadjaj);
+            }
+            catch (CircuitBreakerOpenException)
+            {
+                ViewBag.ExceptionMessage = "Servis privremeno nedostupan — circuit breaker aktivan.";
+                return View(new DogadjajDTO());
+            }
+            catch (HttpRequestException)
+            {
+                ViewBag.ExceptionMessage = "Greska pri komunikaciji sa servisom za dogadjaje.";
+                return View(new DogadjajDTO());
+            }
         }
 
         // GET: Dogadjajs/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewData["LokacijaId"] = new SelectList(_context.Lokacije, "Id", "Naziv");
-            ViewData["TipDogadjajaId"] = new SelectList(_context.TipoviDogadjaja, "Id", "Naziv");
+            var dogadjajiClient = _httpClientFactory.CreateClient("DogadjajiAPI");
+
+            var lokacijeResponse = await dogadjajiClient.GetAsync("/Lokacije");
+            var tipoviResponse = await dogadjajiClient.GetAsync("/TipoviDogadjaja");
+
+            var lokacije = await lokacijeResponse.Content.ReadFromJsonAsync<List<LokacijaDTO>>();
+            var tipovi = await tipoviResponse.Content.ReadFromJsonAsync<List<TipDogadjajaDTO>>();
+
+            ViewData["LokacijaId"] = new SelectList(lokacije, "Id", "Naziv");
+            ViewData["TipDogadjajaId"] = new SelectList(tipovi, "Id", "Naziv");
 
             return View();
         }
 
         // POST: Dogadjajs/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,NazivDogadjaja,AgendaDogadjaja,DatumIVreme,Trajanje,CenaKotizacije,LokacijaId,TipDogadjajaId")] Dogadjaj dogadjaj)
+        public async Task<IActionResult> Create([Bind("NazivDogadjaja,AgendaDogadjaja,DatumIVreme,Trajanje,CenaKotizacije,LokacijaId,TipDogadjajaId")] DogadjajDTO dogadjajDTO)
         {
-            if (ModelState.IsValid)
-            {
-                dogadjaj.Id = Guid.NewGuid();
-                _context.Add(dogadjaj);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["LokacijaId"] = new SelectList(_context.Lokacije, "Id", "Id", dogadjaj.LokacijaId);
-            ViewData["TipDogadjajaId"] = new SelectList(_context.TipoviDogadjaja, "Id", "Id", dogadjaj.TipDogadjajaId);
-            return View(dogadjaj);
+            var dogadjajiClient = _httpClientFactory.CreateClient("DogadjajiAPI");
+
+            var response = await dogadjajiClient.PostAsJsonAsync("/Dogadjaji", dogadjajDTO);
+            response.EnsureSuccessStatusCode();
+
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Dogadjajs/Edit/5
         public async Task<IActionResult> Edit(Guid? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
-            var dogadjaj = await _context.Dogadjaji.FindAsync(id);
+            var dogadjajiClient = _httpClientFactory.CreateClient("DogadjajiAPI");
+
+            var dogadjajResponse = await dogadjajiClient.GetAsync($"/Dogadjaji/{id}");
+            var dogadjaj = await dogadjajResponse.Content.ReadFromJsonAsync<DogadjajDTO>();
+
             if (dogadjaj == null)
-            {
                 return NotFound();
-            }
-            ViewData["LokacijaId"] = new SelectList(_context.Lokacije, "Id", "Naziv", dogadjaj.LokacijaId);
-            ViewData["TipDogadjajaId"] = new SelectList(_context.TipoviDogadjaja, "Id", "Naziv", dogadjaj.TipDogadjajaId);
+
+            var lokacijeResponse = await dogadjajiClient.GetAsync("/Lokacije");
+            var tipoviResponse = await dogadjajiClient.GetAsync("/TipoviDogadjaja");
+            var lokacije = await lokacijeResponse.Content.ReadFromJsonAsync<List<LokacijaDTO>>();
+            var tipovi = await tipoviResponse.Content.ReadFromJsonAsync<List<TipDogadjajaDTO>>();
+
+            ViewData["LokacijaId"] = new SelectList(lokacije, "Id", "Naziv", dogadjaj.LokacijaId);
+            ViewData["TipDogadjajaId"] = new SelectList(tipovi, "Id", "Naziv", dogadjaj.TipDogadjajaId);
+
             return View(dogadjaj);
         }
 
         // POST: Dogadjajs/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,NazivDogadjaja,AgendaDogadjaja,DatumIVreme,Trajanje,CenaKotizacije,LokacijaId,TipDogadjajaId")] Dogadjaj dogadjaj)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Id,NazivDogadjaja,AgendaDogadjaja,DatumIVreme,Trajanje,CenaKotizacije,LokacijaId,TipDogadjajaId")] DogadjajDTO dogadjajDTO)
         {
-            if (id != dogadjaj.Id)
-            {
-                return NotFound();
-            }
+            var dogadjajiClient = _httpClientFactory.CreateClient("DogadjajiAPI");
 
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(dogadjaj);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!DogadjajExists(dogadjaj.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["LokacijaId"] = new SelectList(_context.Lokacije, "Id", "Id", dogadjaj.LokacijaId);
-            ViewData["TipDogadjajaId"] = new SelectList(_context.TipoviDogadjaja, "Id", "Id", dogadjaj.TipDogadjajaId);
-            return View(dogadjaj);
+            var response = await dogadjajiClient.PutAsJsonAsync($"/Dogadjaji/{id}", dogadjajDTO);
+            response.EnsureSuccessStatusCode();
+
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Dogadjajs/Delete/5
         public async Task<IActionResult> Delete(Guid? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
-            var dogadjaj = await _context.Dogadjaji
-                .Include(d => d.Lokacija)
-                .Include(d => d.TipDogadjaja)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var dogadjajiClient = _httpClientFactory.CreateClient("DogadjajiAPI");
+
+            var response = await dogadjajiClient.GetAsync($"/Dogadjaji/{id}");
+            var dogadjaj = await response.Content.ReadFromJsonAsync<DogadjajDTO>();
+
             if (dogadjaj == null)
-            {
                 return NotFound();
-            }
 
             return View(dogadjaj);
         }
@@ -155,19 +178,9 @@ namespace OrganizacijaDogadjajaApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            var dogadjaj = await _context.Dogadjaji.FindAsync(id);
-            if (dogadjaj != null)
-            {
-                _context.Dogadjaji.Remove(dogadjaj);
-            }
-
-            await _context.SaveChangesAsync();
+            var dogadjajiClient = _httpClientFactory.CreateClient("DogadjajiAPI");
+            await dogadjajiClient.DeleteAsync($"/Dogadjaji/{id}");
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool DogadjajExists(Guid id)
-        {
-            return _context.Dogadjaji.Any(e => e.Id == id);
         }
     }
 }

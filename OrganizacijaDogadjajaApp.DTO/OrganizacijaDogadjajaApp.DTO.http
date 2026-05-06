@@ -1,0 +1,6 @@
+@OrganizacijaDogadjajaApp.DTO_HostAddress = http://localhost:5195
+
+GET {{OrganizacijaDogadjajaApp.DTO_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

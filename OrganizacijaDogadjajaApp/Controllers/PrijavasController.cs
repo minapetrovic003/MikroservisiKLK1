@@ -1,153 +1,86 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using OrganizacijaDogadjajaApp.Data;
-using OrganizacijaDogadjajaApp.Models;
+using OrganizacijaDogadjajaApp.DTO;
+using OrganizacijaDogadjajaApp.Patterns;
+using Polly;
 
 namespace OrganizacijaDogadjajaApp.Controllers
 {
     public class PrijavasController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly CircuitBreaker _circuitBreaker;
 
-        public PrijavasController(ApplicationDbContext context)
+        public PrijavasController(IHttpClientFactory httpClientFactory, CircuitBreaker circuitBreaker)
         {
-            _context = context;
+            _httpClientFactory = httpClientFactory;
+            _circuitBreaker = circuitBreaker;
         }
 
-        // GET: Prijavas
+        // GET: Prijavas — RETRY + TIMEOUT
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.Prijave.Include(p => p.Dogadjaj).Include(p => p.Ucesnik);
-            return View(await applicationDbContext.ToListAsync());
-        }
+            var ucesniciClient = _httpClientFactory.CreateClient("UcesniciAPI");
 
-        // GET: Prijavas/Details/5
-        public async Task<IActionResult> Details(Guid? id)
-        {
-            if (id == null)
+            try
             {
-                return NotFound();
-            }
+                HttpResponseMessage? httpResponseMessage = null;
 
-            var prijava = await _context.Prijave
-                .Include(p => p.Dogadjaj)
-                .Include(p => p.Ucesnik)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (prijava == null)
+                var retryPolicy = Policy.Handle<HttpRequestException>()
+                    .WaitAndRetryAsync(2, attempt => TimeSpan.FromMilliseconds(250));
+
+                httpResponseMessage = await retryPolicy.ExecuteAsync(async () =>
+                {
+                    httpResponseMessage = await ucesniciClient.GetAsync("/Prijave");
+                    httpResponseMessage.EnsureSuccessStatusCode();
+                    return httpResponseMessage;
+                });
+
+                var prijave = await httpResponseMessage.Content.ReadFromJsonAsync<List<PrijavaDTO>>();
+
+                return View(prijave);
+            }
+            catch (TaskCanceledException)
             {
-                return NotFound();
+                ViewBag.ExceptionMessage = "Servis za ucesnike ne odgovara — timeout.";
+                return View(new List<PrijavaDTO>());
             }
-
-            return View(prijava);
+            catch (HttpRequestException)
+            {
+                ViewBag.ExceptionMessage = "Servis za ucesnike nedostupan — iscrpljeni pokusaji.";
+                return View(new List<PrijavaDTO>());
+            }
         }
 
         // GET: Prijavas/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewData["DogadjajId"] = new SelectList(_context.Dogadjaji, "Id", "NazivDogadjaja");
-            ViewData["UcesnikId"] = new SelectList(_context.Ucesnici, "Id", "Email");
+            var ucesniciClient = _httpClientFactory.CreateClient("UcesniciAPI");
+            var dogadjajiClient = _httpClientFactory.CreateClient("DogadjajiAPI");
+
+            var ucesniciResponse = await ucesniciClient.GetAsync("/Ucesnici");
+            var dogadjajiResponse = await dogadjajiClient.GetAsync("/Dogadjaji");
+
+            var ucesnici = await ucesniciResponse.Content.ReadFromJsonAsync<List<UcesnikDTO>>();
+            var dogadjaji = await dogadjajiResponse.Content.ReadFromJsonAsync<List<DogadjajDTO>>();
+
+            ViewData["UcesnikId"] = new SelectList(ucesnici, "Id", "Email");
+            ViewData["DogadjajId"] = new SelectList(dogadjaji, "Id", "NazivDogadjaja");
 
             return View();
         }
 
         // POST: Prijavas/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,DatumPrijave,DogadjajId,UcesnikId")] Prijava prijava)
+        public async Task<IActionResult> Create([Bind("DogadjajId,UcesnikId")] PrijavaDTO prijavaDTO)
         {
-            if (ModelState.IsValid)
-            {
-                prijava.Id = Guid.NewGuid();
-                _context.Add(prijava);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["DogadjajId"] = new SelectList(_context.Dogadjaji, "Id", "NazivDogadjaja");
-            ViewData["UcesnikId"] = new SelectList(_context.Ucesnici, "Id", "Email");
+            var ucesniciClient = _httpClientFactory.CreateClient("UcesniciAPI");
 
-            return View(); return View(prijava);
-        }
+            var response = await ucesniciClient.PostAsJsonAsync("/Prijave", prijavaDTO);
+            response.EnsureSuccessStatusCode();
 
-        // GET: Prijavas/Edit/5
-        public async Task<IActionResult> Edit(Guid? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var prijava = await _context.Prijave.FindAsync(id);
-            if (prijava == null)
-            {
-                return NotFound();
-            }
-            ViewData["DogadjajId"] = new SelectList(_context.Dogadjaji, "Id", "Id", prijava.DogadjajId);
-            ViewData["UcesnikId"] = new SelectList(_context.Ucesnici, "Id", "Id", prijava.UcesnikId);
-            return View(prijava);
-        }
-
-        // POST: Prijavas/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,DatumPrijave,DogadjajId,UcesnikId")] Prijava prijava)
-        {
-            if (id != prijava.Id)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(prijava);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!PrijavaExists(prijava.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["DogadjajId"] = new SelectList(_context.Dogadjaji, "Id", "Id", prijava.DogadjajId);
-            ViewData["UcesnikId"] = new SelectList(_context.Ucesnici, "Id", "Id", prijava.UcesnikId);
-            return View(prijava);
-        }
-
-        // GET: Prijavas/Delete/5
-        public async Task<IActionResult> Delete(Guid? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var prijava = await _context.Prijave
-                .Include(p => p.Dogadjaj)
-                .Include(p => p.Ucesnik)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (prijava == null)
-            {
-                return NotFound();
-            }
-
-            return View(prijava);
+            return RedirectToAction(nameof(Index));
         }
 
         // POST: Prijavas/Delete/5
@@ -155,19 +88,9 @@ namespace OrganizacijaDogadjajaApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            var prijava = await _context.Prijave.FindAsync(id);
-            if (prijava != null)
-            {
-                _context.Prijave.Remove(prijava);
-            }
-
-            await _context.SaveChangesAsync();
+            var ucesniciClient = _httpClientFactory.CreateClient("UcesniciAPI");
+            await ucesniciClient.DeleteAsync($"/Prijave/{id}");
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool PrijavaExists(Guid id)
-        {
-            return _context.Prijave.Any(e => e.Id == id);
         }
     }
 }
