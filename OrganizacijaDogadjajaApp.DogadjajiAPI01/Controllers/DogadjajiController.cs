@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OrganizacijaDogadjajaApp.DogadjajiAPI.Data;
+using OrganizacijaDogadjajaApp.DogadjajiAPI.Entities;
 using OrganizacijaDogadjajaApp.DogadjajiAPI.Models;
+using OrganizacijaDogadjajaApp.DogadjajiAPI.Shared.Events;
 using OrganizacijaDogadjajaApp.DTO;
+using System.Text.Json;
 
 namespace OrganizacijaDogadjajaApp.DogadjajiAPI.Controllers
 {
@@ -24,7 +27,6 @@ namespace OrganizacijaDogadjajaApp.DogadjajiAPI.Controllers
         public async Task<ActionResult<IEnumerable<DogadjajDTO>>> Get()
         {
             _counter++;
-
             if (_counter % 4 != 0)
                 return StatusCode(500, "Simulated server error");
 
@@ -52,7 +54,6 @@ namespace OrganizacijaDogadjajaApp.DogadjajiAPI.Controllers
         public async Task<ActionResult<DogadjajDTO>> GetById(Guid id)
         {
             _counter++;
-
             if (_counter % 10 != 0)
                 return StatusCode(500, "Simulated server error");
 
@@ -61,8 +62,7 @@ namespace OrganizacijaDogadjajaApp.DogadjajiAPI.Controllers
                 .Include(x => x.TipDogadjaja)
                 .FirstOrDefaultAsync(x => x.Id == id);
 
-            if (d == null)
-                return NotFound();
+            if (d == null) return NotFound();
 
             return Ok(new DogadjajDTO
             {
@@ -82,31 +82,69 @@ namespace OrganizacijaDogadjajaApp.DogadjajiAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<Guid>> Create([FromBody] DogadjajDTO dto)
         {
-            var dogadjaj = new Dogadjaj
+            // Koristimo transakciju - ili se sve sacuva, ili nista
+            // Ovo je kljucni deo Outbox patterna:
+            // Dogadjaj i OutboxMessage se cuvaju ZAJEDNO u jednoj transakciji
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync();
+            try
             {
-                Id = Guid.NewGuid(),
-                NazivDogadjaja = dto.NazivDogadjaja,
-                AgendaDogadjaja = dto.AgendaDogadjaja,
-                DatumIVreme = dto.DatumIVreme,
-                Trajanje = dto.Trajanje,
-                CenaKotizacije = dto.CenaKotizacije,
-                LokacijaId = dto.LokacijaId,
-                TipDogadjajaId = dto.TipDogadjajaId
-            };
+                var dogadjaj = new Dogadjaj
+                {
+                    Id = Guid.NewGuid(),
+                    NazivDogadjaja = dto.NazivDogadjaja,
+                    AgendaDogadjaja = dto.AgendaDogadjaja,
+                    DatumIVreme = dto.DatumIVreme,
+                    Trajanje = dto.Trajanje,
+                    CenaKotizacije = dto.CenaKotizacije,
+                    LokacijaId = dto.LokacijaId,
+                    TipDogadjajaId = dto.TipDogadjajaId
+                };
 
-            _dbContext.Dogadjaji.Add(dogadjaj);
-            await _dbContext.SaveChangesAsync();
+                _dbContext.Dogadjaji.Add(dogadjaj);
+                await _dbContext.SaveChangesAsync();
 
-            return Ok(dogadjaj.Id);
+                // Kreiranje Outbox poruke - ovo je "kopija pisma u ladici"
+                // Pretvaramo dogadjaj u JSON string koji ce se poslati
+                var eventPayload = JsonSerializer.Serialize(new DogadjajKreiranEvent
+                {
+                    DogadjajId = dogadjaj.Id,
+                    NazivDogadjaja = dogadjaj.NazivDogadjaja,
+                    AgendaDogadjaja = dogadjaj.AgendaDogadjaja,
+                    DatumIVreme = dogadjaj.DatumIVreme,
+                    Trajanje = dogadjaj.Trajanje,
+                    // Lokacija se ucitava posle, ali mozemo i bez toga
+                    NazivLokacije = dto.NazivLokacije ?? ""
+                });
+
+                var outboxMessage = new OutboxMessage
+                {
+                    EventType = "DogadjajKreiran",
+                    Payload = eventPayload,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _dbContext.OutboxMessages.Add(outboxMessage);
+                await _dbContext.SaveChangesAsync();
+
+                // Commit - oba zapisa su sacuvana ili nijedan
+                await transaction.CommitAsync();
+
+                _logger.LogInformation("Dogadjaj {Id} kreiran i outbox poruka sacuvana.", dogadjaj.Id);
+                return Ok(dogadjaj.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Greška pri kreiranju dogadjaja.");
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
         [HttpPut("{id}")]
         public async Task<ActionResult<Guid>> Update(Guid id, [FromBody] DogadjajDTO dto)
         {
             var dogadjaj = await _dbContext.Dogadjaji.FirstOrDefaultAsync(x => x.Id == id);
-
-            if (dogadjaj == null)
-                return NotFound();
+            if (dogadjaj == null) return NotFound();
 
             dogadjaj.NazivDogadjaja = dto.NazivDogadjaja;
             dogadjaj.AgendaDogadjaja = dto.AgendaDogadjaja;
@@ -117,7 +155,6 @@ namespace OrganizacijaDogadjajaApp.DogadjajiAPI.Controllers
             dogadjaj.TipDogadjajaId = dto.TipDogadjajaId;
 
             await _dbContext.SaveChangesAsync();
-
             return Ok(dogadjaj.Id);
         }
 
@@ -125,13 +162,10 @@ namespace OrganizacijaDogadjajaApp.DogadjajiAPI.Controllers
         public async Task<ActionResult> Delete(Guid id)
         {
             var dogadjaj = await _dbContext.Dogadjaji.FirstOrDefaultAsync(x => x.Id == id);
-
-            if (dogadjaj == null)
-                return NotFound();
+            if (dogadjaj == null) return NotFound();
 
             _dbContext.Dogadjaji.Remove(dogadjaj);
             await _dbContext.SaveChangesAsync();
-
             return Ok();
         }
     }

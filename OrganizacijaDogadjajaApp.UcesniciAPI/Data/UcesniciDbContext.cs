@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using OrganizacijaDogadjajaApp.UcesniciAPI.Entities;
 using OrganizacijaDogadjajaApp.UcesniciAPI.Models;
 
 namespace OrganizacijaDogadjajaApp.UcesniciAPI.Data
@@ -12,5 +13,22 @@ namespace OrganizacijaDogadjajaApp.UcesniciAPI.Data
 
         public DbSet<Ucesnik> Ucesnici { get; set; }
         public DbSet<Prijava> Prijave { get; set; }
+
+       
+        public DbSet<ProcessedMessage> ProcessedMessages { get; set; }
+        public DbSet<DogadjajReferenca> DogadjajiReference { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<ProcessedMessage>()
+                .HasIndex(x => x.EventId)
+                .IsUnique();
+
+            modelBuilder.Entity<DogadjajReferenca>()
+                .HasIndex(x => x.DogadjajId)
+                .IsUnique();
+
+            base.OnModelCreating(modelBuilder);
+        }
     }
 }

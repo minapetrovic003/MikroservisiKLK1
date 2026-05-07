@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using OrganizacijaDogadjajaApp.PredavanjaAPI.Data;
 
@@ -11,9 +12,11 @@ using OrganizacijaDogadjajaApp.PredavanjaAPI.Data;
 namespace OrganizacijaDogadjajaApp.PredavanjaAPI.Migrations
 {
     [DbContext(typeof(PredavanjaDbContext))]
-    partial class PredavanjaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260507232602_DodatProcessedMessages")]
+    partial class DodatProcessedMessages
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

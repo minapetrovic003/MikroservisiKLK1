@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using OrganizacijaDogadjajaApp.DogadjajiAPI.Data;
 
@@ -11,9 +12,11 @@ using OrganizacijaDogadjajaApp.DogadjajiAPI.Data;
 namespace OrganizacijaDogadjajaApp.DogadjajiAPI.Migrations
 {
     [DbContext(typeof(DogadjajiDbContext))]
-    partial class DogadjajiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260507230953_DodatOutboxTabela")]
+    partial class DodatOutboxTabela
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

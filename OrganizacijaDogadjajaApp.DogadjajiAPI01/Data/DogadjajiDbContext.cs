@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using OrganizacijaDogadjajaApp.DogadjajiAPI.Entities;
 using OrganizacijaDogadjajaApp.DogadjajiAPI.Models;
 
 namespace OrganizacijaDogadjajaApp.DogadjajiAPI.Data
@@ -13,5 +14,17 @@ namespace OrganizacijaDogadjajaApp.DogadjajiAPI.Data
         public DbSet<Dogadjaj> Dogadjaji { get; set; }
         public DbSet<Lokacija> Lokacije { get; set; }
         public DbSet<TipDogadjaja> TipoviDogadjaja { get; set; }
+
+        //Uvodimo outBox tabelu 
+        public DbSet<OutboxMessage> OutboxMessages { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            // Index po CreatedAt da bi sortiranje bilo brze
+            //Objasnjeno na .Net-u
+            modelBuilder.Entity<OutboxMessage>().HasIndex(x => x.CreatedAt);
+
+            base.OnModelCreating(modelBuilder);
+        }
     }
 }
