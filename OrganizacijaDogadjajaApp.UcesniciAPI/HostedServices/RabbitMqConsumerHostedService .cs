@@ -50,12 +50,53 @@ namespace OrganizacijaDogadjajaApp.UcesniciAPI.HostedServices
                 autoDelete: false,
                 cancellationToken: stoppingToken);
 
+            // Dead Letter Exchange
+            await _channel.ExchangeDeclareAsync(
+                exchange: "dead.letter.exchange",
+                type: ExchangeType.Direct,
+                durable: true,
+                autoDelete: false,
+                cancellationToken: stoppingToken);
+
+            // Dead Letter Queue - ovde stizu poruke koje nisu uspesno obradjene
+            await _channel.QueueDeclareAsync(
+                queue: "dead.letter.queue",
+                durable: true,
+                exclusive: false,
+                autoDelete: false,
+                arguments: null,
+                cancellationToken: stoppingToken);
+
+            // Vezujemo DLQ za DLX
+            await _channel.QueueBindAsync(
+                queue: "dead.letter.queue",
+                exchange: "dead.letter.exchange",
+                routingKey: "dead",
+                cancellationToken: stoppingToken);
+
+            // Prava queue sa DLQ argumentima
+            // Prava queue sa DLQ argumentima
+            var queueArguments = new Dictionary<string, object?>
+            {
+                 // quorum queue je obavezan za x-delivery-limit
+                    { "x-queue-type", "quorum" },
+
+                // Dead Letter Exchange
+                    { "x-dead-letter-exchange", "dead.letter.exchange" },
+
+                 // routing key za DLQ
+                    { "x-dead-letter-routing-key", "dead" },
+
+                 // max broj retry pokusaja
+                    { "x-delivery-limit", 10 }
+            };
+
             await _channel.QueueDeclareAsync(
                 queue: _options.Queue,
                 durable: true,
                 exclusive: false,
                 autoDelete: false,
-                arguments: null,
+                arguments: queueArguments,
                 cancellationToken: stoppingToken);
 
             await _channel.QueueBindAsync(
@@ -85,7 +126,9 @@ namespace OrganizacijaDogadjajaApp.UcesniciAPI.HostedServices
             catch (OperationCanceledException) { }
         }
 
-        private async Task HandleMessageAsync(BasicDeliverEventArgs ea, CancellationToken cancellationToken)
+        private async Task HandleMessageAsync(
+            BasicDeliverEventArgs ea,
+            CancellationToken cancellationToken)
         {
             if (_channel is null) return;
 
@@ -118,10 +161,12 @@ namespace OrganizacijaDogadjajaApp.UcesniciAPI.HostedServices
                         NazivDogadjaja = eventData.NazivDogadjaja,
                         AgendaDogadjaja = eventData.AgendaDogadjaja,
                         DatumIVreme = eventData.DatumIVreme,
-                        WelcomeMessage = $"Dobrodošli na '{eventData.NazivDogadjaja}'! " +
-                                         $"Dogadjaj se održava {eventData.DatumIVreme:dd.MM.yyyy HH:mm} " +
-                                         $"na lokaciji {eventData.NazivLokacije}. " +
-                                         $"Agenda: {eventData.AgendaDogadjaja}"
+                        WelcomeMessage =
+                            $"Dobrodošli na '{eventData.NazivDogadjaja}'! " +
+                            $"Dogadjaj se održava " +
+                            $"{eventData.DatumIVreme:dd.MM.yyyy HH:mm} " +
+                            $"na lokaciji {eventData.NazivLokacije}. " +
+                            $"Agenda: {eventData.AgendaDogadjaja}"
                     };
 
                     db.DogadjajiReference.Add(referenca);
@@ -136,16 +181,29 @@ namespace OrganizacijaDogadjajaApp.UcesniciAPI.HostedServices
                     await db.SaveChangesAsync(cancellationToken);
                     await tx.CommitAsync(cancellationToken);
 
-                    _logger.LogInformation("DogadjajReferenca sacuvana za {DogadjajId}", eventData.DogadjajId);
+                    _logger.LogInformation(
+                        "DogadjajReferenca sacuvana za {DogadjajId}",
+                        eventData.DogadjajId);
                 }
 
-                await _channel.BasicAckAsync(ea.DeliveryTag, multiple: false, cancellationToken: cancellationToken);
+                await _channel.BasicAckAsync(
+                    ea.DeliveryTag,
+                    multiple: false,
+                    cancellationToken: cancellationToken);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Greška pri obradi poruke. DeliveryTag: {Tag}", ea.DeliveryTag);
+
                 if (_channel is not null)
-                    await _channel.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: true, cancellationToken: cancellationToken);
+                {
+                    // requeue: false -> poruka ide u Dead Letter Queue, ne vraca se u isti red
+                    await _channel.BasicNackAsync(
+                        ea.DeliveryTag,
+                        multiple: false,
+                        requeue: false,
+                        cancellationToken: cancellationToken);
+                }
             }
         }
 

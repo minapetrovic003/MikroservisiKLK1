@@ -19,6 +19,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<IRabbitMqPublisher, RabbitMqPublisher>();
 
 builder.Services.AddHostedService<OutboxMessagePublisher>();
+builder.Services.AddHostedService<DogadjajInfoResponderService>();
 
 var app = builder.Build();
 

@@ -14,5 +14,8 @@
         public string Queue { get; set; } = "dogadjaji.events.ucesnici";
         public string RoutingKey { get; set; } = "";
         public ushort PrefetchCount { get; set; } = 1;
+
+        public string DogadjajInfoRequestQueue { get; set; } = "dogadjaji.info.request";
+        public string DogadjajInfoReplyQueue { get; set; } = "dogadjaji.info.reply.ucesnici";
     }
 }

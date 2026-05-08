@@ -46,29 +46,65 @@ namespace OrganizacijaDogadjajaApp.PredavanjaAPI.HostedServices
 
             await _channel.ExchangeDeclareAsync(
                 exchange: _options.Exchange,
-                type: ExchangeType.Fanout,  
+                type: ExchangeType.Fanout,
                 durable: true,
                 autoDelete: false,
                 cancellationToken: stoppingToken);
 
-            // Ovo je PREDAVANJA-specificna queue
+            // Dead Letter Exchange
+            await _channel.ExchangeDeclareAsync(
+                exchange: "dead.letter.exchange",
+                type: ExchangeType.Direct,
+                durable: true,
+                autoDelete: false,
+                cancellationToken: stoppingToken);
+
+            // Dead Letter Queue - ovde stizu poruke koje nisu uspesno obradjene
             await _channel.QueueDeclareAsync(
-                queue: _options.Queue,
+                queue: "dead.letter.queue",
                 durable: true,
                 exclusive: false,
                 autoDelete: false,
                 arguments: null,
                 cancellationToken: stoppingToken);
 
-            // Vezujemo queue za exchange
-            // Fanout ignorise routing key (prazan string)
+            // Vezujemo DLQ za DLX
+            await _channel.QueueBindAsync(
+                queue: "dead.letter.queue",
+                exchange: "dead.letter.exchange",
+                routingKey: "dead",
+                cancellationToken: stoppingToken);
+
+            // Prava queue sa DLQ argumentima
+            var queueArguments = new Dictionary<string, object?>
+            {
+                 // quorum queue je obavezan za x-delivery-limit
+                    { "x-queue-type", "quorum" },
+
+                // Dead Letter Exchange
+                    { "x-dead-letter-exchange", "dead.letter.exchange" },
+
+                 // routing key za DLQ
+                    { "x-dead-letter-routing-key", "dead" },
+
+                 // max broj retry pokusaja
+                    { "x-delivery-limit", 10 }
+            };
+
+            await _channel.QueueDeclareAsync(
+                queue: _options.Queue,
+                durable: true,
+                exclusive: false,
+                autoDelete: false,
+                arguments: queueArguments,
+                cancellationToken: stoppingToken);
+
             await _channel.QueueBindAsync(
                 queue: _options.Queue,
                 exchange: _options.Exchange,
                 routingKey: _options.RoutingKey,
                 cancellationToken: stoppingToken);
 
-            // Uzimamo po jednu poruku - da ne preoptere server
             await _channel.BasicQosAsync(
                 prefetchSize: 0,
                 prefetchCount: _options.PrefetchCount,
@@ -76,19 +112,16 @@ namespace OrganizacijaDogadjajaApp.PredavanjaAPI.HostedServices
                 cancellationToken: stoppingToken);
 
             var consumer = new AsyncEventingBasicConsumer(_channel);
-
-          
             consumer.ReceivedAsync += async (_, ea) => await HandleMessageAsync(ea, stoppingToken);
 
             await _channel.BasicConsumeAsync(
                 queue: _options.Queue,
-                autoAck: false,     // VAZNO: rucno potvrdjujemo obradu
+                autoAck: false,
                 consumer: consumer,
                 cancellationToken: stoppingToken);
 
             _logger.LogInformation("PredavanjaAPI sluša queue: {Queue}", _options.Queue);
 
-           
             try { await Task.Delay(Timeout.Infinite, stoppingToken); }
             catch (OperationCanceledException) { }
         }
@@ -102,7 +135,6 @@ namespace OrganizacijaDogadjajaApp.PredavanjaAPI.HostedServices
                 using var scope = _scopeFactory.CreateScope();
                 var db = scope.ServiceProvider.GetRequiredService<PredavanjaDbContext>();
 
-                // Citamo JSON poruku
                 var body = Encoding.UTF8.GetString(ea.Body.ToArray());
                 var eventData = JsonSerializer.Deserialize<DogadjajKreiranEvent>(body);
 
@@ -113,18 +145,15 @@ namespace OrganizacijaDogadjajaApp.PredavanjaAPI.HostedServices
                     return;
                 }
 
-                // IDEMPOTENTNOST: koristimo transakciju da atomski proverimo i sacuvamo
                 await using var tx = await db.Database.BeginTransactionAsync(cancellationToken);
 
-                // Proveravamo da li smo vec obradili ovu poruku
-                // MessageId = ID outbox poruke iz DogadjajiAPI
                 var messageId = ea.BasicProperties.MessageId;
                 var alreadyProcessed = await db.ProcessedMessages
                     .AnyAsync(x => x.EventId == messageId, cancellationToken);
 
                 if (!alreadyProcessed)
                 {
-                      var predavac = await db.Predavaci.FirstOrDefaultAsync(cancellationToken);
+                    var predavac = await db.Predavaci.FirstOrDefaultAsync(cancellationToken);
 
                     if (predavac != null)
                     {
@@ -141,7 +170,6 @@ namespace OrganizacijaDogadjajaApp.PredavanjaAPI.HostedServices
                         db.Predavanja.Add(predavanje);
                     }
 
-                   
                     db.ProcessedMessages.Add(new ProcessedMessage
                     {
                         EventId = messageId!,
@@ -159,7 +187,6 @@ namespace OrganizacijaDogadjajaApp.PredavanjaAPI.HostedServices
                     _logger.LogInformation("Poruka {MessageId} vec obradjena, preskacemo.", messageId);
                 }
 
-          
                 await _channel.BasicAckAsync(ea.DeliveryTag, multiple: false, cancellationToken: cancellationToken);
             }
             catch (Exception ex)
@@ -167,7 +194,14 @@ namespace OrganizacijaDogadjajaApp.PredavanjaAPI.HostedServices
                 _logger.LogError(ex, "Greška pri obradi poruke. DeliveryTag: {Tag}", ea.DeliveryTag);
 
                 if (_channel is not null)
-                    await _channel.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: true, cancellationToken: cancellationToken);
+                {
+                    // requeue: false -> poruka ide u Dead Letter Queue, ne vraca se u isti red
+                    await _channel.BasicNackAsync(
+                        ea.DeliveryTag,
+                        multiple: false,
+                        requeue: false,
+                        cancellationToken: cancellationToken);
+                }
             }
         }
 

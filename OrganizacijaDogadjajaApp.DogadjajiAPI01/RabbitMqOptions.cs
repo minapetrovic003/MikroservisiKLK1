@@ -15,5 +15,8 @@
         // Exchange je kao "posta" - svi consumeri se prijave na njega
         // Fanout znaci: posalji SVIM koji su se prijavili
         public string Exchange { get; set; } = "dogadjaji.events";
+
+        //Za request-reply zahteve
+        public string DogadjajInfoRequestQueue { get; set; } = "dogadjaji.info.request";
     }
 }

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using OrganizacijaDogadjajaApp.DTO;
 using OrganizacijaDogadjajaApp.UcesniciAPI.Data;
 using OrganizacijaDogadjajaApp.UcesniciAPI.Models;
+using OrganizacijaDogadjajaApp.UcesniciAPI.Services;
 
 namespace OrganizacijaDogadjajaApp.UcesniciAPI.Controllers
 {
@@ -11,10 +12,17 @@ namespace OrganizacijaDogadjajaApp.UcesniciAPI.Controllers
     public class PrijaveController : ControllerBase
     {
         private readonly UcesniciDbContext _dbContext;
+        private readonly DogadjajInfoClient _dogadjajInfoClient;
+        private readonly IEmailQueuePublisher _emailPublisher;
 
-        public PrijaveController(UcesniciDbContext dbContext)
+        public PrijaveController(
+            UcesniciDbContext dbContext,
+            DogadjajInfoClient dogadjajInfoClient,
+            IEmailQueuePublisher emailPublisher)
         {
             _dbContext = dbContext;
+            _dogadjajInfoClient = dogadjajInfoClient;
+            _emailPublisher = emailPublisher;
         }
 
         [HttpGet]
@@ -38,6 +46,18 @@ namespace OrganizacijaDogadjajaApp.UcesniciAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<Guid>> Create([FromBody] PrijavaDTO dto)
         {
+            // Request-Reply:
+           
+
+            var dogadjajInfo =
+                await _dogadjajInfoClient.GetDogadjajInfoAsync(dto.DogadjajId);
+
+            if (dogadjajInfo is null || !dogadjajInfo.Pronadjen)
+            {
+                return BadRequest(
+                    "Dogadjaj nije pronadjen ili je servis nedostupan.");
+            }
+
             var prijava = new Prijava
             {
                 Id = Guid.NewGuid(),
@@ -47,7 +67,24 @@ namespace OrganizacijaDogadjajaApp.UcesniciAPI.Controllers
             };
 
             _dbContext.Prijave.Add(prijava);
+
             await _dbContext.SaveChangesAsync();
+
+            
+
+            await _emailPublisher.StaviURedAsync(new EmailMessage
+            {
+                To = "ucesnik@example.com",
+
+                Subject =
+                    $"Potvrda prijave na " +
+                    $"{dogadjajInfo?.NazivDogadjaja ?? dto.DogadjajId.ToString()}",
+
+                Body =
+                    $"Uspešno ste se prijavili. " +
+                    $"Dogadjaj: {dogadjajInfo?.NazivDogadjaja}. " +
+                    $"Datum: {dogadjajInfo?.DatumIVreme:dd.MM.yyyy HH:mm}"
+            });
 
             return Ok(prijava.Id);
         }
@@ -55,12 +92,14 @@ namespace OrganizacijaDogadjajaApp.UcesniciAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<ActionResult> Delete(Guid id)
         {
-            var prijava = await _dbContext.Prijave.FirstOrDefaultAsync(x => x.Id == id);
+            var prijava = await _dbContext.Prijave
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             if (prijava == null)
                 return NotFound();
 
             _dbContext.Prijave.Remove(prijava);
+
             await _dbContext.SaveChangesAsync();
 
             return Ok();
