@@ -83,7 +83,7 @@ namespace OrganizacijaDogadjajaApp.UcesniciAPI.HostedServices
 
                     { "x-dead-letter-routing-key", "dead" },
 
-                 // max broj retry pokusaja
+                 
                     { "x-delivery-limit", 10 }
             };
 
@@ -110,6 +110,7 @@ namespace OrganizacijaDogadjajaApp.UcesniciAPI.HostedServices
             var consumer = new AsyncEventingBasicConsumer(_channel);
             consumer.ReceivedAsync += async (_, ea) => await HandleMessageAsync(ea, stoppingToken);
 
+            //sTART -> SLUSANJE QUERYA
             await _channel.BasicConsumeAsync(
                 queue: _options.Queue,
                 autoAck: false,
@@ -141,7 +142,7 @@ namespace OrganizacijaDogadjajaApp.UcesniciAPI.HostedServices
                     await _channel.BasicAckAsync(ea.DeliveryTag, multiple: false, cancellationToken: cancellationToken);
                     return;
                 }
-
+                //IDEMPOTENT CONSUMER
                 await using var tx = await db.Database.BeginTransactionAsync(cancellationToken);
 
                 var messageId = ea.BasicProperties.MessageId;
@@ -197,7 +198,7 @@ namespace OrganizacijaDogadjajaApp.UcesniciAPI.HostedServices
                     await _channel.BasicNackAsync(
                         ea.DeliveryTag,
                         multiple: false,
-                        requeue: false,
+                        requeue: false, //TRUE -> vratila bi se u quveri i doslo bi do beskonacne petlje
                         cancellationToken: cancellationToken);
                 }
             }

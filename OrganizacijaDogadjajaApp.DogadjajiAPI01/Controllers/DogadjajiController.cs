@@ -26,9 +26,12 @@ namespace OrganizacijaDogadjajaApp.DogadjajiAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<DogadjajDTO>>> Get()
         {
-            _counter++;
-            if (_counter % 4 != 0)
-                return StatusCode(500, "Simulated server error");
+            //Simuliram gresku za Retry
+            //Svaki 4 poziv prolazi- 3poruke, 1 retry, 1 retry -> prolazi
+            //Kada se testira Circuit breaker zakomentarisi
+            //_counter++;
+            //if (_counter % 4 != 0)
+            //    return StatusCode(500, "Simulated server error");
 
             var dogadjaji = await _dbContext.Dogadjaji
                 .Include(d => d.Lokacija)
@@ -53,6 +56,8 @@ namespace OrganizacijaDogadjajaApp.DogadjajiAPI.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<DogadjajDTO>> GetById(Guid id)
         {
+
+            //Koristimo za simulacju CircutBrekera
             _counter++;
             if (_counter % 10 != 0)
                 return StatusCode(500, "Simulated server error");

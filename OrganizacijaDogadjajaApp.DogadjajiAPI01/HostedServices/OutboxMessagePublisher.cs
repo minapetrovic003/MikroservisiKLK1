@@ -4,14 +4,15 @@ using OrganizacijaDogadjajaApp.DogadjajiAPI.Services;
 
 namespace OrganizacijaDogadjajaApp.DogadjajiAPI.HostedServices
 {
-    // BackgroundService = servis koji radi u pozadini, paralelno sa HTTP serverom
+    // BackgroundService 
+    //Proverava OutBox i salje poruke RabbitMq
+    //Koristim ga jer je DB Scope a OutBox Singlton kako bi mogli komunicirti
     public class OutboxMessagePublisher : BackgroundService
     {
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<OutboxMessagePublisher> _logger;
 
         // Koristimo IServiceScopeFactory jer DbContext nije Singleton
-        // (ne moze Singleton da pozove Scoped servis direktno)
         public OutboxMessagePublisher(IServiceScopeFactory scopeFactory, ILogger<OutboxMessagePublisher> logger)
         {
             _scopeFactory = scopeFactory;

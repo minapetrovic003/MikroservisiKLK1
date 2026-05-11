@@ -33,8 +33,9 @@ namespace OrganizacijaDogadjajaApp.PredavanjaAPI.HostedServices
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var factory = new ConnectionFactory
+            var factory = new ConnectionFactory 
             {
+                //Uslovo receno zna kako da napravi konekciju!
                 HostName = _options.HostName,
                 Port = _options.Port,
                 UserName = _options.UserName,
@@ -43,15 +44,16 @@ namespace OrganizacijaDogadjajaApp.PredavanjaAPI.HostedServices
 
             _connection = await factory.CreateConnectionAsync(stoppingToken);
             _channel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
+            //publichuje preko chennela
 
             await _channel.ExchangeDeclareAsync(
-                exchange: _options.Exchange,
+                exchange: _options.Exchange, //Mora biti isti kao publishera
                 type: ExchangeType.Fanout,
                 durable: true,
                 autoDelete: false,
                 cancellationToken: stoppingToken);
 
-            // Dead Letter Exchange
+            // Dead Letter Exchange -> Za neuspesne poruke
             await _channel.ExchangeDeclareAsync(
                 exchange: "dead.letter.exchange",
                 type: ExchangeType.Direct,

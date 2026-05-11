@@ -10,32 +10,64 @@ namespace OrganizacijaDogadjajaApp
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            //"registrovan" CircuitBreaker 
             builder.Services.AddSingleton<CircuitBreaker>(sp =>
                 new CircuitBreaker(3, TimeSpan.FromSeconds(10))
             );
 
+            // TIMEOUT + HTTPS sertifikat za DogadjajiAPI
             builder.Services.AddHttpClient("DogadjajiAPI", (client) =>
             {
                 client.Timeout = TimeSpan.FromSeconds(10);
-                client.BaseAddress = new Uri(builder.Configuration.GetValue<string>("DogadjajiAPIEndpoint")!);
+                client.BaseAddress = new Uri(
+                    builder.Configuration.GetValue<string>("DogadjajiAPIEndpoint")!);
+            })
+            .ConfigurePrimaryHttpMessageHandler(() =>
+            {
+                return new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback =
+                        HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                };
             });
 
+            // PredavanjaAPI
             builder.Services.AddHttpClient("PredavanjaAPI", (client) =>
             {
                 client.Timeout = TimeSpan.FromSeconds(10);
-                client.BaseAddress = new Uri(builder.Configuration.GetValue<string>("PredavanjaAPIEndpoint")!);
+                client.BaseAddress = new Uri(
+                    builder.Configuration.GetValue<string>("PredavanjaAPIEndpoint")!);
+            })
+            .ConfigurePrimaryHttpMessageHandler(() =>
+            {
+                return new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback =
+                        HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                };
             });
 
+            // UcesniciAPI
             builder.Services.AddHttpClient("UcesniciAPI", (client) =>
             {
                 client.Timeout = TimeSpan.FromSeconds(10);
-                client.BaseAddress = new Uri(builder.Configuration.GetValue<string>("UcesniciAPIEndpoint")!);
+                client.BaseAddress = new Uri(
+                    builder.Configuration.GetValue<string>("UcesniciAPIEndpoint")!);
+            })
+            .ConfigurePrimaryHttpMessageHandler(() =>
+            {
+                return new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback =
+                        HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                };
             });
 
             builder.Services.AddControllersWithViews();
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(
+                    builder.Configuration.GetConnectionString("DefaultConnection")));
 
             var app = builder.Build();
 
@@ -46,8 +78,11 @@ namespace OrganizacijaDogadjajaApp
             }
 
             app.UseHttpsRedirection();
+
             app.UseRouting();
+
             app.UseStaticFiles();
+
             app.UseAuthorization();
 
             app.MapControllerRoute(

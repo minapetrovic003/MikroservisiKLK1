@@ -17,42 +17,44 @@ namespace OrganizacijaDogadjajaApp.Controllers
             _circuitBreaker = circuitBreaker;
         }
 
-        // GET: Dogadjajs — koristi RETRY + TIMEOUT
+        // RETRY + TIMEOUT
         public async Task<IActionResult> Index()
         {
             var dogadjajiClient = _httpClientFactory.CreateClient("DogadjajiAPI");
 
             try
             {
-                HttpResponseMessage? httpResponseMessage = null;
+                var response = await dogadjajiClient.GetAsync("/Dogadjaji");
 
-                var retryPolicy = Policy.Handle<HttpRequestException>()
-                    .WaitAndRetryAsync(2, attempt => TimeSpan.FromMilliseconds(250));
+                response.EnsureSuccessStatusCode();
 
-                httpResponseMessage = await retryPolicy.ExecuteAsync(async () =>
-                {
-                    httpResponseMessage = await dogadjajiClient.GetAsync("/Dogadjaji");
-                    httpResponseMessage.EnsureSuccessStatusCode();
-                    return httpResponseMessage;
-                });
+                var json = await response.Content.ReadAsStringAsync();
 
-                var dogadjaji = await httpResponseMessage.Content.ReadFromJsonAsync<List<DogadjajDTO>>();
+                Console.WriteLine("JSON IZ API-ja:");
+                Console.WriteLine(json);
 
-                return View(dogadjaji);
+                var dogadjaji = System.Text.Json.JsonSerializer.Deserialize<List<DogadjajDTO>>(
+                    json,
+                    new System.Text.Json.JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+
+                Console.WriteLine($"BROJ DOGADJAJA: {dogadjaji?.Count}");
+
+                return View(dogadjaji ?? new List<DogadjajDTO>());
             }
-            catch (TaskCanceledException)
+            catch (Exception ex)
             {
-                ViewBag.ExceptionMessage = "Servis za dogadjaje ne odgovara — timeout.";
-                return View(new List<DogadjajDTO>());
-            }
-            catch (HttpRequestException)
-            {
-                ViewBag.ExceptionMessage = "Servis za dogadjaje nedostupan — iscrpljeni pokusaji.";
+                Console.WriteLine(ex.ToString());
+
+                ViewBag.ExceptionMessage = ex.Message;
+
                 return View(new List<DogadjajDTO>());
             }
         }
 
-        // GET: Dogadjajs/Details/5 — koristi CIRCUIT BREAKER
+        // CIRCUIT BREAKER
         public async Task<IActionResult> Details(Guid? id)
         {
             if (id == null)

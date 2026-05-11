@@ -44,8 +44,8 @@ public sealed class DogadjajInfoClient : IAsyncDisposable
         await _consumerChannel.QueueDeclareAsync(
             queue: _options.DogadjajInfoReplyQueue,
             durable: false,
-            exclusive: false,
-            autoDelete: false,
+            exclusive: true,
+            autoDelete: true,
             arguments: null,
             cancellationToken: cancellationToken);
 
@@ -109,6 +109,7 @@ public sealed class DogadjajInfoClient : IAsyncDisposable
         }
     }
 
+    //Mapiranje odgovora
     private async Task HandleReplyAsync(object sender, BasicDeliverEventArgs ea)
     {
         if (_consumerChannel is null) return;

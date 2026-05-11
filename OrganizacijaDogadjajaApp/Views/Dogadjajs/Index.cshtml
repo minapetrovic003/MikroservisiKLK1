@@ -1,4 +1,4 @@
-﻿@model IEnumerable<OrganizacijaDogadjajaApp.Models.Dogadjaj>
+﻿@model IEnumerable<OrganizacijaDogadjajaApp.DTO.DogadjajDTO>
 
 @{
     ViewData["Title"] = "Index";
@@ -6,66 +6,99 @@
 
 <h1>Index</h1>
 
+@if (ViewBag.ExceptionMessage != null)
+{
+    <div class="alert alert-danger">
+        @ViewBag.ExceptionMessage
+    </div>
+}
+
 <p>
     <a asp-action="Create">Create New</a>
 </p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.NazivDogadjaja)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.AgendaDogadjaja)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.DatumIVreme)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Trajanje)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CenaKotizacije)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Lokacija)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.TipDogadjaja)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.NazivDogadjaja)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.AgendaDogadjaja)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.DatumIVreme)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Trajanje)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CenaKotizacije)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Lokacija.Id)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.TipDogadjaja.Id)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
+
+@if (Model == null || !Model.Any())
+{
+    <div class="alert alert-warning">
+        Nema učitanih događaja.
+    </div>
 }
-    </tbody>
-</table>
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.NazivDogadjaja)
+                </th>
+
+                <th>
+                    @Html.DisplayNameFor(model => model.AgendaDogadjaja)
+                </th>
+
+                <th>
+                    @Html.DisplayNameFor(model => model.DatumIVreme)
+                </th>
+
+                <th>
+                    @Html.DisplayNameFor(model => model.Trajanje)
+                </th>
+
+                <th>
+                    @Html.DisplayNameFor(model => model.CenaKotizacije)
+                </th>
+
+                <th>
+                    Lokacija
+                </th>
+
+                <th>
+                    Tip događaja
+                </th>
+
+                <th></th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        @item.NazivDogadjaja
+                    </td>
+
+                    <td>
+                        @item.AgendaDogadjaja
+                    </td>
+
+                    <td>
+                        @item.DatumIVreme
+                    </td>
+
+                    <td>
+                        @item.Trajanje
+                    </td>
+
+                    <td>
+                        @item.CenaKotizacije
+                    </td>
+
+                    <td>
+                        @item.NazivLokacije
+                    </td>
+
+                    <td>
+                        @item.NazivTipaDogadjaja
+                    </td>
+
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                        <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                        <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

@@ -44,8 +44,8 @@ public sealed class DogadjajInfoResponderService : BackgroundService
 
         // Deklarisemo request queue - ovde stizu zahtevi od UcesniciAPI
         await _channel.QueueDeclareAsync(
-            queue: _options.DogadjajInfoRequestQueue,
-            durable: false,
+            queue: _options.DogadjajInfoRequestQueue,//name 
+            durable: true,
             exclusive: false,
             autoDelete: false,
             arguments: null,

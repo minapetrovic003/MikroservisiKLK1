@@ -1,5 +1,6 @@
 ﻿namespace OrganizacijaDogadjajaApp.PredavanjaAPI.Options
 {
+    //BITNO! -> Svi imaju isti Excheing, a ostalo mapitranje je zasebno 
     public class RabbitMqOptions
     {
         public const string SectionName = "RabbitMq";

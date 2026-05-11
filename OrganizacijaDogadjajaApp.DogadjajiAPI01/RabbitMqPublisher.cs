@@ -14,6 +14,7 @@ namespace OrganizacijaDogadjajaApp.DogadjajiAPI.Services
     // IAsyncDisposable = kad se ugasi app, lepo zatvori konekciju
     public sealed class RabbitMqPublisher : IRabbitMqPublisher, IAsyncDisposable
     {
+        //Sealed -> klasa ne moze da se nasledi 
         private readonly ConnectionFactory _factory;
         private readonly RabbitMqOptions _options;
 
@@ -40,14 +41,17 @@ namespace OrganizacijaDogadjajaApp.DogadjajiAPI.Services
         {
             // Lazy inicijalizacija - konekcija se pravi tek kad je treba
             await EnsureInitializedAsync(cancellationToken);
+            //proverava da li konekcija i kanal postoje ako ne -> napravi ih
 
             if (_channel is null)
                 throw new InvalidOperationException("RabbitMQ channel nije inicijalizovan.");
 
             var body = Encoding.UTF8.GetBytes(payload);
+            //Kroz mrezu se ne salju stringovi vec bytes ovo string pretvara u byt
 
             var properties = new BasicProperties
             {
+                //Metapodaci poruke
                 Persistent = true,          // poruka prezivi restart RabbitMQ-a
                 MessageId = messageId,      // jedinstveni ID - koriste consumeri za idempotentnost
                 Type = eventType,           // tip eventa (npr. "DogadjajKreiran")
@@ -58,13 +62,15 @@ namespace OrganizacijaDogadjajaApp.DogadjajiAPI.Services
             // Fanout exchange ignorise routing key i salje svima
             await _channel.BasicPublishAsync(
                 exchange: _options.Exchange,
-                routingKey: "",             // fanout ignoriše ovo
+                routingKey: "",             
                 mandatory: false,
                 basicProperties: properties,
                 body: body,
                 cancellationToken: cancellationToken);
         }
 
+        //Double-Check pattern -> sprecava race condition kada  
+        //niti odjednom pozivaju publishera
         private async Task EnsureInitializedAsync(CancellationToken cancellationToken)
         {
             // Ako vec imamo kanal, nema potrebe za inicijalizacijom

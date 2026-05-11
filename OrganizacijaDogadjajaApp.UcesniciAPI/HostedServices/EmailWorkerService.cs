@@ -34,7 +34,7 @@ public sealed class EmailWorkerService : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         // Kreiramo outbox folder ako ne postoji
-        var outboxPath = Path.Combine(Directory.GetCurrentDirectory(), "outbox");
+        var outboxPath = Path.Combine(Directory.GetCurrentDirectory(), "Outbox");
         Directory.CreateDirectory(outboxPath);
 
         var factory = new ConnectionFactory
