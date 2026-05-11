@@ -74,17 +74,13 @@ namespace OrganizacijaDogadjajaApp.UcesniciAPI.HostedServices
                 routingKey: "dead",
                 cancellationToken: stoppingToken);
 
-            // Prava queue sa DLQ argumentima
-            // Prava queue sa DLQ argumentima
             var queueArguments = new Dictionary<string, object?>
             {
                  // quorum queue je obavezan za x-delivery-limit
                     { "x-queue-type", "quorum" },
 
-                // Dead Letter Exchange
                     { "x-dead-letter-exchange", "dead.letter.exchange" },
 
-                 // routing key za DLQ
                     { "x-dead-letter-routing-key", "dead" },
 
                  // max broj retry pokusaja
