@@ -1,6 +1,5 @@
 ﻿namespace OrganizacijaDogadjajaApp.DogadjajiAPI.Shared.Events
 {
-    // u susini kada saljem poruku ona mora da sadrzi sledece:
     public class DogadjajKreiranEvent
     {
         public Guid DogadjajId { get; set; }

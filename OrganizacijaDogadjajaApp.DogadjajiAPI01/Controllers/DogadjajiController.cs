@@ -26,12 +26,12 @@ namespace OrganizacijaDogadjajaApp.DogadjajiAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<DogadjajDTO>>> Get()
         {
-            //Simuliram gresku za Retry
-            //Svaki 4 poziv prolazi- 3poruke, 1 retry, 1 retry -> prolazi
-            //Kada se testira Circuit breaker zakomentarisi
+
+
             //_counter++;
             //if (_counter % 4 != 0)
             //    return StatusCode(500, "Simulated server error");
+            //await Task.Delay(15000); // -> simulacija za timeout
 
             var dogadjaji = await _dbContext.Dogadjaji
                 .Include(d => d.Lokacija)
@@ -57,7 +57,7 @@ namespace OrganizacijaDogadjajaApp.DogadjajiAPI.Controllers
         public async Task<ActionResult<DogadjajDTO>> GetById(Guid id)
         {
 
-            //Koristimo za simulacju CircutBrekera
+            
             _counter++;
             if (_counter % 10 != 0)
                 return StatusCode(500, "Simulated server error");
@@ -87,9 +87,7 @@ namespace OrganizacijaDogadjajaApp.DogadjajiAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<Guid>> Create([FromBody] DogadjajDTO dto)
         {
-            // Koristimo transakciju - ili se sve sacuva, ili nista
-            // Ovo je kljucni deo Outbox patterna:
-            // Dogadjaj i OutboxMessage se cuvaju ZAJEDNO u jednoj transakciji
+            
             await using var transaction = await _dbContext.Database.BeginTransactionAsync();
             try
             {
@@ -108,8 +106,8 @@ namespace OrganizacijaDogadjajaApp.DogadjajiAPI.Controllers
                 _dbContext.Dogadjaji.Add(dogadjaj);
                 await _dbContext.SaveChangesAsync();
 
-                // Kreiranje Outbox poruke - ovo je "kopija pisma u ladici"
-                // Pretvaramo dogadjaj u JSON string koji ce se poslati
+                // Kreiranje Outbox poruke 
+                
                 var eventPayload = JsonSerializer.Serialize(new DogadjajKreiranEvent
                 {
                     DogadjajId = dogadjaj.Id,
@@ -117,7 +115,7 @@ namespace OrganizacijaDogadjajaApp.DogadjajiAPI.Controllers
                     AgendaDogadjaja = dogadjaj.AgendaDogadjaja,
                     DatumIVreme = dogadjaj.DatumIVreme,
                     Trajanje = dogadjaj.Trajanje,
-                    // Lokacija se ucitava posle, ali mozemo i bez toga
+                    
                     NazivLokacije = dto.NazivLokacije ?? ""
                 });
 
@@ -131,7 +129,7 @@ namespace OrganizacijaDogadjajaApp.DogadjajiAPI.Controllers
                 _dbContext.OutboxMessages.Add(outboxMessage);
                 await _dbContext.SaveChangesAsync();
 
-                // Commit - oba zapisa su sacuvana ili nijedan
+                
                 await transaction.CommitAsync();
 
                 _logger.LogInformation("Dogadjaj {Id} kreiran i outbox poruka sacuvana.", dogadjaj.Id);

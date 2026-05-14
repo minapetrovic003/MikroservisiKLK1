@@ -50,15 +50,13 @@ namespace OrganizacijaDogadjajaApp.UcesniciAPI.HostedServices
                 autoDelete: false,
                 cancellationToken: stoppingToken);
 
-            // Dead Letter Exchange
             await _channel.ExchangeDeclareAsync(
                 exchange: "dead.letter.exchange",
                 type: ExchangeType.Direct,
                 durable: true,
                 autoDelete: false,
                 cancellationToken: stoppingToken);
-
-            // Dead Letter Queue - ovde stizu poruke koje nisu uspesno obradjene
+ 
             await _channel.QueueDeclareAsync(
                 queue: "dead.letter.queue",
                 durable: true,
@@ -67,7 +65,6 @@ namespace OrganizacijaDogadjajaApp.UcesniciAPI.HostedServices
                 arguments: null,
                 cancellationToken: stoppingToken);
 
-            // Vezujemo DLQ za DLX
             await _channel.QueueBindAsync(
                 queue: "dead.letter.queue",
                 exchange: "dead.letter.exchange",
@@ -194,7 +191,6 @@ namespace OrganizacijaDogadjajaApp.UcesniciAPI.HostedServices
 
                 if (_channel is not null)
                 {
-                    // requeue: false -> poruka ide u Dead Letter Queue, ne vraca se u isti red
                     await _channel.BasicNackAsync(
                         ea.DeliveryTag,
                         multiple: false,

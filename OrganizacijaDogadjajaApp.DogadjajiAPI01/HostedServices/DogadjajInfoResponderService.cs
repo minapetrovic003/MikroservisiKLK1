@@ -42,9 +42,8 @@ public sealed class DogadjajInfoResponderService : BackgroundService
         _connection = await factory.CreateConnectionAsync(stoppingToken);
         _channel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
 
-        // Deklarisemo request queue - ovde stizu zahtevi od UcesniciAPI
         await _channel.QueueDeclareAsync(
-            queue: _options.DogadjajInfoRequestQueue,//name 
+            queue: _options.DogadjajInfoRequestQueue,
             durable: true,
             exclusive: false,
             autoDelete: false,
@@ -103,7 +102,7 @@ public sealed class DogadjajInfoResponderService : BackgroundService
                     : new DogadjajInfoResponse { DogadjajId = request.DogadjajId, Pronadjen = false };
             }
 
-            // Saljemo odgovor nazad na ReplyTo queue (kao u vezbi!)
+            // Saljemo odgovor nazad na ReplyTo queue 
             if (!string.IsNullOrWhiteSpace(ea.BasicProperties.ReplyTo))
             {
                 var responseJson = JsonSerializer.Serialize(response);

@@ -4,15 +4,13 @@ using OrganizacijaDogadjajaApp.DogadjajiAPI.Services;
 
 namespace OrganizacijaDogadjajaApp.DogadjajiAPI.HostedServices
 {
-    // BackgroundService 
     //Proverava OutBox i salje poruke RabbitMq
-    //Koristim ga jer je DB Scope a OutBox Singlton kako bi mogli komunicirti
+    
     public class OutboxMessagePublisher : BackgroundService
     {
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<OutboxMessagePublisher> _logger;
 
-        // Koristimo IServiceScopeFactory jer DbContext nije Singleton
         public OutboxMessagePublisher(IServiceScopeFactory scopeFactory, ILogger<OutboxMessagePublisher> logger)
         {
             _scopeFactory = scopeFactory;
@@ -21,7 +19,6 @@ namespace OrganizacijaDogadjajaApp.DogadjajiAPI.HostedServices
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            // Vrtimo petlju sve dok se app ne ugasi
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
@@ -30,7 +27,7 @@ namespace OrganizacijaDogadjajaApp.DogadjajiAPI.HostedServices
                     var db = scope.ServiceProvider.GetRequiredService<DogadjajiDbContext>();
                     var publisher = scope.ServiceProvider.GetRequiredService<IRabbitMqPublisher>();
 
-                    // Uzimamo max 5 najstarijih poruka iz outbox tabele
+                   
                     var pending = await db.OutboxMessages
                         .OrderBy(x => x.CreatedAt)
                         .Take(5)

@@ -7,6 +7,6 @@
         public string AgendaDogadjaja { get; set; } = string.Empty;
         public DateTime DatumIVreme { get; set; }
         public int Trajanje { get; set; }
-        public bool Pronadjen { get; set; }  // Dogadaj ne postojim= false
+        public bool Pronadjen { get; set; }  
     }
 }

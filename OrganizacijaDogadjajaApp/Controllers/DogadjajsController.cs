@@ -44,6 +44,17 @@ namespace OrganizacijaDogadjajaApp.Controllers
 
                 return View(dogadjaji ?? new List<DogadjajDTO>());
             }
+            catch (TaskCanceledException ex) 
+            { 
+                Console.WriteLine("================================="); 
+                Console.WriteLine("TIMEOUT DETEKTOVAN!");
+                Console.WriteLine($"Vreme: {DateTime.Now}");
+                Console.WriteLine($"Poruka: {ex.Message}");
+                Console.WriteLine("DogadjajiAPI nije odgovorio na vreme."); 
+                Console.WriteLine("================================="); 
+                ViewBag.ExceptionMessage = "Timeout - DogadjajiAPI nije odgovorio na vreme.";
+                return View(new List<DogadjajDTO>());
+            }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());

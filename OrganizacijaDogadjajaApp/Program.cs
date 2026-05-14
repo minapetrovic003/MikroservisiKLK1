@@ -10,12 +10,12 @@ namespace OrganizacijaDogadjajaApp
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            //"registrovan" CircuitBreaker 
+            
             builder.Services.AddSingleton<CircuitBreaker>(sp =>
                 new CircuitBreaker(3, TimeSpan.FromSeconds(10))
             );
 
-            // TIMEOUT + HTTPS sertifikat za DogadjajiAPI
+            
             builder.Services.AddHttpClient("DogadjajiAPI", (client) =>
             {
                 client.Timeout = TimeSpan.FromSeconds(10);

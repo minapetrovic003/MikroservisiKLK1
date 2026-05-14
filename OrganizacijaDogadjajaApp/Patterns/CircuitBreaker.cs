@@ -2,9 +2,9 @@
 {
     public enum CircuitBreakerState
     {
-        Closed,    // Svi zahtevi prolaze
-        Open,      // Nakon threshold-a svi zahtevi se odbijaju
-        HalfOpen   // Nakon 10 sekundi pušta jedan probni zahtev
+        Closed,    
+        Open,      
+        HalfOpen   
     }
 
     public class CircuitBreaker

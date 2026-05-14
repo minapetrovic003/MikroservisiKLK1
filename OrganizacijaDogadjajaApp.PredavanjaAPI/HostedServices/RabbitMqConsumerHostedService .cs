@@ -35,7 +35,6 @@ namespace OrganizacijaDogadjajaApp.PredavanjaAPI.HostedServices
         {
             var factory = new ConnectionFactory 
             {
-                //Uslovo receno zna kako da napravi konekciju!
                 HostName = _options.HostName,
                 Port = _options.Port,
                 UserName = _options.UserName,
@@ -44,16 +43,14 @@ namespace OrganizacijaDogadjajaApp.PredavanjaAPI.HostedServices
 
             _connection = await factory.CreateConnectionAsync(stoppingToken);
             _channel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
-            //publichuje preko chennela
 
             await _channel.ExchangeDeclareAsync(
-                exchange: _options.Exchange, //Mora biti isti kao publishera
+                exchange: _options.Exchange, 
                 type: ExchangeType.Fanout,
                 durable: true,
                 autoDelete: false,
                 cancellationToken: stoppingToken);
 
-            // Dead Letter Exchange -> Za neuspesne poruke
             await _channel.ExchangeDeclareAsync(
                 exchange: "dead.letter.exchange",
                 type: ExchangeType.Direct,
@@ -61,7 +58,6 @@ namespace OrganizacijaDogadjajaApp.PredavanjaAPI.HostedServices
                 autoDelete: false,
                 cancellationToken: stoppingToken);
 
-            // Dead Letter Queue - ovde stizu poruke koje nisu uspesno obradjene
             await _channel.QueueDeclareAsync(
                 queue: "dead.letter.queue",
                 durable: true,
@@ -70,26 +66,20 @@ namespace OrganizacijaDogadjajaApp.PredavanjaAPI.HostedServices
                 arguments: null,
                 cancellationToken: stoppingToken);
 
-            // Vezujemo DLQ za DLX
             await _channel.QueueBindAsync(
                 queue: "dead.letter.queue",
                 exchange: "dead.letter.exchange",
                 routingKey: "dead",
                 cancellationToken: stoppingToken);
 
-            // Prava queue sa DLQ argumentima
             var queueArguments = new Dictionary<string, object?>
             {
-                 // quorum queue je obavezan za x-delivery-limit
                     { "x-queue-type", "quorum" },
 
-                // Dead Letter Exchange
                     { "x-dead-letter-exchange", "dead.letter.exchange" },
 
-                 // routing key za DLQ
                     { "x-dead-letter-routing-key", "dead" },
 
-                 // max broj retry pokusaja
                     { "x-delivery-limit", 10 }
             };
 
@@ -107,7 +97,7 @@ namespace OrganizacijaDogadjajaApp.PredavanjaAPI.HostedServices
                 routingKey: _options.RoutingKey,
                 cancellationToken: stoppingToken);
 
-            await _channel.BasicQosAsync(
+            await _channel.BasicQosAsync( //Uzima 1 poruku u trenutu 
                 prefetchSize: 0,
                 prefetchCount: _options.PrefetchCount,
                 global: false,

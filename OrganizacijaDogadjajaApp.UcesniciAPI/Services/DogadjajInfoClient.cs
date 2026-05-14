@@ -9,7 +9,7 @@ using System.Text.Json;
 
 namespace OrganizacijaDogadjajaApp.UcesniciAPI.Services;
 
-// Ovaj klijent implementira request-reply - isto kao MolbaRequestReplyClient iz vezbi!
+// request-reply 
 public sealed class DogadjajInfoClient : IAsyncDisposable
 {
     private readonly RabbitMqOptions _options;

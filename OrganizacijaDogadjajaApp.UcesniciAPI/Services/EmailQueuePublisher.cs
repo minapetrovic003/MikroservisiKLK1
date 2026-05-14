@@ -38,7 +38,7 @@ public sealed class EmailQueuePublisher : IEmailQueuePublisher, IAsyncDisposable
             body: body,
             cancellationToken: ct);
     }
-
+    //Doubl-Check pattern
     private async Task EnsureInitializedAsync(CancellationToken ct)
     {
         if (_channel is not null) return;

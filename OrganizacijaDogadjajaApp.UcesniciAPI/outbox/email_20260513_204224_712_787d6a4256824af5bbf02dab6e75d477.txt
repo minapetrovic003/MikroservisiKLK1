@@ -1,0 +1,5 @@
+To: ucesnik@example.com
+Subject: Potvrda prijave na Dogadjaj01
+Date: 2026-05-13 20:42:24 UTC
+
+Uspešno ste se prijavili. Dogadjaj: Dogadjaj01. Datum: 13.05.2026 20:13

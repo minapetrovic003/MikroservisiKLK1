@@ -8,14 +8,11 @@ using System.Text.Json;
 
 namespace OrganizacijaDogadjajaApp.UcesniciAPI.HostedServices;
 
-// Worker koji cita email queue i "salje" mejlove (zapisuje .txt fajlove)
-// Rate limit: max 10 mejlova u minuti
 public sealed class EmailWorkerService : BackgroundService
 {
     private readonly RabbitMqOptions _options;
     private readonly ILogger<EmailWorkerService> _logger;
 
-    // Rate limiting state
     private int _poslatihUTekucemMinutu = 0;
     private DateTime _pocetakMinuta = DateTime.UtcNow;
     private const int MaxEmailaPoMinutu = 10;
@@ -33,7 +30,6 @@ public sealed class EmailWorkerService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        // Kreiramo outbox folder ako ne postoji
         var outboxPath = Path.Combine(Directory.GetCurrentDirectory(), "Outbox");
         Directory.CreateDirectory(outboxPath);
 
@@ -56,7 +52,6 @@ public sealed class EmailWorkerService : BackgroundService
             arguments: null,
             cancellationToken: stoppingToken);
 
-        // Uzimamo po jednu poruku - jer kontrolisemo tempo sami
         await _channel.BasicQosAsync(prefetchSize: 0, prefetchCount: 1, global: false, cancellationToken: stoppingToken);
 
         var consumer = new AsyncEventingBasicConsumer(_channel);
@@ -80,31 +75,25 @@ public sealed class EmailWorkerService : BackgroundService
 
         try
         {
-            // RATE LIMITING LOGIKA
-            // Proveravamo da li smo u istom minutu
             var sada = DateTime.UtcNow;
             if ((sada - _pocetakMinuta).TotalMinutes >= 1.0)
             {
-                // Novi minut - resetujemo brojac
                 _pocetakMinuta = sada;
                 _poslatihUTekucemMinutu = 0;
             }
 
             if (_poslatihUTekucemMinutu >= MaxEmailaPoMinutu)
             {
-                // Dostigli smo limit - cekamo do pocetka sledeceg minuta
                 var preostaloMs = (int)(60_000 - (sada - _pocetakMinuta).TotalMilliseconds);
                 _logger.LogWarning("Rate limit dostignut ({Max}/min). Cekam {Sec}s.",
                     MaxEmailaPoMinutu, preostaloMs / 1000);
 
                 await Task.Delay(Math.Max(preostaloMs, 1000), ct);
 
-                // Resetujemo posle cekanja
                 _pocetakMinuta = DateTime.UtcNow;
                 _poslatihUTekucemMinutu = 0;
             }
 
-            // Citamo email iz poruke
             var body = Encoding.UTF8.GetString(ea.Body.ToArray());
             var email = JsonSerializer.Deserialize<EmailMessage>(body);
 
@@ -114,7 +103,6 @@ public sealed class EmailWorkerService : BackgroundService
                 return;
             }
 
-            // "Saljemo" email - pisemo .txt fajl u outbox folder
             var fileName = $"email_{DateTime.UtcNow:yyyyMMdd_HHmmss_fff}_{Guid.NewGuid():N}.txt";
             var filePath = Path.Combine(outboxPath, fileName);
             var sadrzaj = $"""
