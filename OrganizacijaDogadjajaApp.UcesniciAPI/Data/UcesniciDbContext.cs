@@ -17,6 +17,7 @@ namespace OrganizacijaDogadjajaApp.UcesniciAPI.Data
        
         public DbSet<ProcessedMessage> ProcessedMessages { get; set; }
         public DbSet<DogadjajReferenca> DogadjajiReference { get; set; }
+        public DbSet<SagaPrijava> SagaPrijave { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

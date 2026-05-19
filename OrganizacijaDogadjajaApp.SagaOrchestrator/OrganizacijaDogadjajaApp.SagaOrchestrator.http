@@ -1,0 +1,6 @@
+@OrganizacijaDogadjajaApp.SagaOrchestrator_HostAddress = http://localhost:5258
+
+GET {{OrganizacijaDogadjajaApp.SagaOrchestrator_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

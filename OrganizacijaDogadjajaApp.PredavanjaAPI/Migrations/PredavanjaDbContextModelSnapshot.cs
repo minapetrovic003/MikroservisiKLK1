@@ -105,6 +105,29 @@ namespace OrganizacijaDogadjajaApp.PredavanjaAPI.Migrations
                     b.ToTable("Predavanja");
                 });
 
+            modelBuilder.Entity("OrganizacijaDogadjajaApp.PredavanjaAPI.Models.SagaRaspored", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("DogadjajId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("KreiranaU")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("Obrisan")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("UcesnikId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SagaRasporedi");
+                });
+
             modelBuilder.Entity("OrganizacijaDogadjajaApp.PredavanjaAPI.Models.Predavanje", b =>
                 {
                     b.HasOne("OrganizacijaDogadjajaApp.PredavanjaAPI.Models.Predavac", "Predavac")

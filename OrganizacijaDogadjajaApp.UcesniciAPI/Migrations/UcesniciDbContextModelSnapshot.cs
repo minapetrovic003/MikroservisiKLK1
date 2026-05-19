@@ -103,6 +103,32 @@ namespace OrganizacijaDogadjajaApp.UcesniciAPI.Migrations
                     b.ToTable("Prijave");
                 });
 
+            modelBuilder.Entity("OrganizacijaDogadjajaApp.UcesniciAPI.Models.SagaPrijava", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("DatumPrijave")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("DogadjajId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("Otkazana")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("RezervacijaId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UcesnikId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SagaPrijave");
+                });
+
             modelBuilder.Entity("OrganizacijaDogadjajaApp.UcesniciAPI.Models.Ucesnik", b =>
                 {
                     b.Property<Guid>("Id")

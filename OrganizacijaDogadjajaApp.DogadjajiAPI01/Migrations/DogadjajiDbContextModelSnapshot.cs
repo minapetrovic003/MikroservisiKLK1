@@ -108,6 +108,29 @@ namespace OrganizacijaDogadjajaApp.DogadjajiAPI.Migrations
                     b.ToTable("Lokacije");
                 });
 
+            modelBuilder.Entity("OrganizacijaDogadjajaApp.DogadjajiAPI.Models.SagaRezervacija", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("DogadjajId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("KreiranaU")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("Otkazana")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("UcesnikId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SagaRezervacije");
+                });
+
             modelBuilder.Entity("OrganizacijaDogadjajaApp.DogadjajiAPI.Models.TipDogadjaja", b =>
                 {
                     b.Property<Guid>("Id")

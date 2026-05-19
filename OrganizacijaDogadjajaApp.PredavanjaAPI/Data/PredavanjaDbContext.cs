@@ -15,6 +15,7 @@ namespace OrganizacijaDogadjajaApp.PredavanjaAPI.Data
         public DbSet<Predavac> Predavaci { get; set; }
 
         public DbSet<ProcessedMessage> ProcessedMessages { get; set; }
+        public DbSet<SagaRaspored> SagaRasporedi { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

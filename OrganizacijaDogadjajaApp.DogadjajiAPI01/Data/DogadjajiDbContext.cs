@@ -17,7 +17,7 @@ namespace OrganizacijaDogadjajaApp.DogadjajiAPI.Data
 
         //Uvodimo outBox tabelu 
         public DbSet<OutboxMessage> OutboxMessages { get; set; }
-
+        public DbSet<SagaRezervacija> SagaRezervacije { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Index po CreatedAt da bi sortiranje bilo brze

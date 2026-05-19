@@ -2,6 +2,7 @@
   <Project Path="OrganizacijaDogadjajaApp.DogadjajiAPI01/OrganizacijaDogadjajaApp.DogadjajiAPI.csproj" Id="6eb196cb-3060-4c24-842c-6322f1c48b73" />
   <Project Path="OrganizacijaDogadjajaApp.DTO/OrganizacijaDogadjajaApp.DTO.csproj" Id="3dd4a807-a0d9-44bf-abbe-3249ab7f3a4a" />
   <Project Path="OrganizacijaDogadjajaApp.PredavanjaAPI/OrganizacijaDogadjajaApp.PredavanjaAPI.csproj" Id="566f01ce-5f8d-424b-b4a1-e72f545be3a7" />
+  <Project Path="OrganizacijaDogadjajaApp.SagaOrchestrator/OrganizacijaDogadjajaApp.SagaOrchestrator.csproj" Id="5d6e5a71-0955-404b-8c53-f67bf347f44f" />
   <Project Path="OrganizacijaDogadjajaApp.UcesniciAPI/OrganizacijaDogadjajaApp.UcesniciAPI.csproj" Id="e3af0806-1578-494a-a2e0-02e6ed30e724" />
   <Project Path="OrganizacijaDogadjajaApp/OrganizacijaDogadjajaApp.csproj" />
 </Solution>
