@@ -1,4 +1,4 @@
-﻿namespace OrganizacijaDogadjajaApp.DTO.Events
+﻿namespace OrganizacijaDogadjajaApp.DTO.EventSaga
 {
     //Final event -> Svi eventi uspesno zavrseni -> Saga gotova
     public class SagaZavrsenaEvent

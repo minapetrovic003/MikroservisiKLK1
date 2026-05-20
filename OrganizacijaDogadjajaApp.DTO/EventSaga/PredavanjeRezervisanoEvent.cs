@@ -1,4 +1,4 @@
-﻿namespace OrganizacijaDogadjajaApp.DTO.Events
+﻿namespace OrganizacijaDogadjajaApp.DTO.EventSaga
 {
     //Uspesno rezervisano -> Salji ovaj event
     public class PredavanjeRezervisanoEvent

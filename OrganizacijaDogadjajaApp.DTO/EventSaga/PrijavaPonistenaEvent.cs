@@ -1,4 +1,4 @@
-﻿namespace OrganizacijaDogadjajaApp.DTO.Events
+﻿namespace OrganizacijaDogadjajaApp.DTO.EventSaga
 {
     //Kompenzacioni event -> nije uspela prijava -> ucesniciApi brisu prijavu
     //Rollback

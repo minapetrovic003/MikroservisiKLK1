@@ -1,4 +1,4 @@
-﻿namespace OrganizacijaDogadjajaApp.DTO.Events
+﻿namespace OrganizacijaDogadjajaApp.DTO.EventSaga
 {
     //Pokrece konpezaciju
     //Ako nema mesta na predavanju -> faliur event

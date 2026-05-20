@@ -1,0 +1,5 @@
+To: ucesnik@example.com
+Subject: Potvrda prijave na Test Konferencija
+Date: 2026-05-19 23:17:07 UTC
+
+Uspešno ste se prijavili. Dogadjaj: Test Konferencija. Datum: 15.06.2026 10:00

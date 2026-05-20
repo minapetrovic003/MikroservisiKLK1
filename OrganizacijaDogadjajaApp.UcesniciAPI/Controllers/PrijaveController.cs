@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OrganizacijaDogadjajaApp.DTO;
+using OrganizacijaDogadjajaApp.DTO.EventSaga;
 using OrganizacijaDogadjajaApp.UcesniciAPI.Data;
 using OrganizacijaDogadjajaApp.UcesniciAPI.Models;
 using OrganizacijaDogadjajaApp.UcesniciAPI.Services;
@@ -12,17 +13,31 @@ namespace OrganizacijaDogadjajaApp.UcesniciAPI.Controllers
     public class PrijaveController : ControllerBase
     {
         private readonly UcesniciDbContext _dbContext;
+
         private readonly DogadjajInfoClient _dogadjajInfoClient;
+
         private readonly IEmailQueuePublisher _emailPublisher;
+
+        private readonly ISagaPublisher _sagaPublisher;
+
+        private readonly ILogger<PrijaveController> _logger;
 
         public PrijaveController(
             UcesniciDbContext dbContext,
             DogadjajInfoClient dogadjajInfoClient,
-            IEmailQueuePublisher emailPublisher)
+            IEmailQueuePublisher emailPublisher,
+            ISagaPublisher sagaPublisher,
+            ILogger<PrijaveController> logger)
         {
             _dbContext = dbContext;
+
             _dogadjajInfoClient = dogadjajInfoClient;
+
             _emailPublisher = emailPublisher;
+
+            _sagaPublisher = sagaPublisher;
+
+            _logger = logger;
         }
 
         [HttpGet]
@@ -46,8 +61,7 @@ namespace OrganizacijaDogadjajaApp.UcesniciAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<Guid>> Create([FromBody] PrijavaDTO dto)
         {
-            // Request-Reply:
-           
+            // REQUEST-REPLY PREMA DOGADJAJI API
 
             var dogadjajInfo =
                 await _dogadjajInfoClient.GetDogadjajInfoAsync(dto.DogadjajId);
@@ -58,11 +72,28 @@ namespace OrganizacijaDogadjajaApp.UcesniciAPI.Controllers
                     "Dogadjaj nije pronadjen ili je servis nedostupan.");
             }
 
+
+
+            // POKRETANJE SAGA PROCESA
+
+            var sagaId = Guid.NewGuid();
+
+            _logger.LogInformation(
+                "[SAGA {SagaId}] Pokretanje Saga procesa za prijavu.",
+                sagaId);
+
+
+
+            // KREIRANJE PRIJAVE
+
             var prijava = new Prijava
             {
                 Id = Guid.NewGuid(),
+
                 DatumPrijave = DateTime.Now,
+
                 DogadjajId = dto.DogadjajId,
+
                 UcesnikId = dto.UcesnikId
             };
 
@@ -70,6 +101,35 @@ namespace OrganizacijaDogadjajaApp.UcesniciAPI.Controllers
 
             await _dbContext.SaveChangesAsync();
 
+
+            // SAGA EVENT
+
+            var sagaEvent = new PrijavaKreiranaEvent
+            {
+                SagaId = sagaId,
+
+                PrijavaId = prijava.Id,
+
+                UcesnikId = prijava.UcesnikId,
+
+                DogadjajId = prijava.DogadjajId,
+
+                PredavanjeId = Guid.NewGuid(),
+
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _sagaPublisher.PublishAsync(
+                sagaEvent,
+                "prijava.kreirana");
+
+            _logger.LogInformation(
+                "[SAGA {SagaId}] Poslat event prijava.kreirana",
+                sagaId);
+
+
+
+            // EMAIL QUEUE
             
 
             await _emailPublisher.StaviURedAsync(new EmailMessage
@@ -85,6 +145,8 @@ namespace OrganizacijaDogadjajaApp.UcesniciAPI.Controllers
                     $"Dogadjaj: {dogadjajInfo?.NazivDogadjaja}. " +
                     $"Datum: {dogadjajInfo?.DatumIVreme:dd.MM.yyyy HH:mm}"
             });
+
+
 
             return Ok(prijava.Id);
         }

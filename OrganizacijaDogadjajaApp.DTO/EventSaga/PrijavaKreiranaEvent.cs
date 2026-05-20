@@ -1,4 +1,4 @@
-﻿namespace OrganizacijaDogadjajaApp.DTO.Events
+﻿namespace OrganizacijaDogadjajaApp.DTO.EventSaga
 {
     //UcesnicApi -> Kreirana je prijava
     public class PrijavaKreiranaEvent
