@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using OrganizacijaDogadjajaApp.PredavanjaAPI.Data;
+using OrganizacijaDogadjajaApp.PredavanjaAPI.EventSourcing;
+using OrganizacijaDogadjajaApp.PredavanjaAPI.EventSourcing.Repositories;
 using OrganizacijaDogadjajaApp.PredavanjaAPI.HostedServices;
 using OrganizacijaDogadjajaApp.PredavanjaAPI.Options;
 using OrganizacijaDogadjajaApp.PredavanjaAPI.Services;
@@ -25,6 +27,24 @@ builder.Services.Configure<RabbitMqOptions>(
 builder.Services.AddDbContext<PredavanjaDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
+
+
+
+// ========================================
+// EVENT SOURCING DB CONTEXT
+// ========================================
+
+builder.Services.AddDbContext<EventStoreDbContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection")));
+
+
+
+// ========================================
+// EVENT STORE REPOSITORY
+// ========================================
+
+builder.Services.AddScoped<IEventStoreRepository, EventStoreRepository>();
 
 
 
