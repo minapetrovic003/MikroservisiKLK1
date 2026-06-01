@@ -18,16 +18,12 @@ namespace OrganizacijaDogadjajaApp.SagaOrchestrator.Data
             {
                 entity.HasKey(x => x.Id);
 
-                // Indeks po statusu za brže pretrage aktivnih saga
                 entity.HasIndex(x => x.Status);
 
-                // Indeks po DogadjajId za pretragu svih prijava za dogadjaj
                 entity.HasIndex(x => x.DogadjajId);
 
-                // Status je string max 50 znakova
                 entity.Property(x => x.Status).HasMaxLength(50);
 
-                // GreskaOpis može biti dugačak tekst
                 entity.Property(x => x.GreskaOpis).HasMaxLength(2000);
             });
 

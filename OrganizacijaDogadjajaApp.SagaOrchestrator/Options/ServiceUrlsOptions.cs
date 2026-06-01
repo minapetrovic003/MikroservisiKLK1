@@ -1,8 +1,6 @@
 ﻿namespace OrganizacijaDogadjajaApp.SagaOrchestrator.Options
 {
-    /// <summary>
-    /// URL adrese svih mikroservisa koje Saga Orchestrator poziva.
-    /// </summary>
+    
     public class ServiceUrlsOptions
     {
         public const string SectionName = "ServiceUrls";

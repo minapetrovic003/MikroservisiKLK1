@@ -6,25 +6,21 @@ using OrganizacijaDogadjajaApp.SagaOrchestrator.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Učitaj opcije iz appsettings.json
+
 builder.Services.Configure<RabbitMqOptions>(
     builder.Configuration.GetSection(RabbitMqOptions.SectionName));
 
 builder.Services.Configure<ServiceUrlsOptions>(
     builder.Configuration.GetSection(ServiceUrlsOptions.SectionName));
 
-// Baza podataka za Saga stanje
 builder.Services.AddDbContext<SagaDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Registracija HTTP klijenata za pozivanje servisa
-// AddHttpClient automatski kreira i reciklira HttpClient instance (efikasno!)
+
 builder.Services.AddHttpClient<DogadjajiSagaClient>();
 builder.Services.AddHttpClient<PredavanjaSagaClient>();
 builder.Services.AddHttpClient<UcesniciSagaClient>();
 
-// Registracija Saga Orchestrator servisa
-// AddScoped = novi objekat za svaki HTTP zahtev (ispravno za DbContext)
 builder.Services.AddScoped<PrijavaOrkestratorService>();
 
 builder.Services.AddControllers();

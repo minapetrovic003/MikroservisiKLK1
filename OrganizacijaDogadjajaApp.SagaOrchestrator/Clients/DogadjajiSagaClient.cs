@@ -5,10 +5,7 @@ using System.Text.Json;
 
 namespace OrganizacijaDogadjajaApp.SagaOrchestrator.Clients
 {
-    /// <summary>
-    /// HTTP klijent koji Saga Orchestrator koristi da komunicira sa DogadjajiAPI.
-    /// Sadrži i normalne akcije i kompenzacione akcije.
-    /// </summary>
+    
     public class DogadjajiSagaClient
     {
         private readonly HttpClient _httpClient;

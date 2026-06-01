@@ -18,9 +18,7 @@ namespace OrganizacijaDogadjajaApp.PredavanjaAPI.Controllers
             _repository = repository;
         }
 
-        // =========================================
         // CREATE
-        // =========================================
 
         [HttpPost]
         public async Task<IActionResult> Create(
@@ -47,9 +45,7 @@ namespace OrganizacijaDogadjajaApp.PredavanjaAPI.Controllers
             });
         }
 
-        // =========================================
         // CHANGE NAZIV
-        // =========================================
 
         [HttpPut("{id}/naziv")]
         public async Task<IActionResult> ChangeNaziv(
@@ -73,9 +69,7 @@ namespace OrganizacijaDogadjajaApp.PredavanjaAPI.Controllers
             return Ok();
         }
 
-        // =========================================
         // CHANGE SALA
-        // =========================================
 
         [HttpPut("{id}/sala")]
         public async Task<IActionResult> ChangeSala(
@@ -99,9 +93,7 @@ namespace OrganizacijaDogadjajaApp.PredavanjaAPI.Controllers
             return Ok();
         }
 
-        // =========================================
         // CHANGE PREDAVAC
-        // =========================================
 
         [HttpPut("{id}/predavac")]
         public async Task<IActionResult> ChangePredavac(
@@ -125,9 +117,7 @@ namespace OrganizacijaDogadjajaApp.PredavanjaAPI.Controllers
             return Ok();
         }
 
-        // =========================================
         // CHANGE VREME
-        // =========================================
 
         [HttpPut("{id}/vreme")]
         public async Task<IActionResult> ChangeVreme(
@@ -151,9 +141,7 @@ namespace OrganizacijaDogadjajaApp.PredavanjaAPI.Controllers
             return Ok();
         }
 
-        // =========================================
         // CANCEL
-        // =========================================
 
         [HttpPut("{id}/cancel")]
         public async Task<IActionResult> Cancel(
@@ -177,9 +165,7 @@ namespace OrganizacijaDogadjajaApp.PredavanjaAPI.Controllers
             return Ok();
         }
 
-        // =========================================
         // GET CURRENT STATE
-        // =========================================
 
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(Guid id)
@@ -202,9 +188,7 @@ namespace OrganizacijaDogadjajaApp.PredavanjaAPI.Controllers
             });
         }
 
-        // =========================================
         // HISTORY
-        // =========================================
 
         [HttpGet("{id}/history")]
         public async Task<IActionResult> History(Guid id)
@@ -214,9 +198,7 @@ namespace OrganizacijaDogadjajaApp.PredavanjaAPI.Controllers
             return Ok(events);
         }
 
-        // =========================================
         // CREATE SNAPSHOT
-        // =========================================
 
         [HttpPost("{id}/snapshot")]
         public async Task<IActionResult> CreateSnapshot(Guid id)

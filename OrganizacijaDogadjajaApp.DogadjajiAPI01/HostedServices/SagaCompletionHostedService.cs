@@ -54,7 +54,7 @@ namespace OrganizacijaDogadjajaApp.DogadjajiAPI01.HostedServices
 
             var consumer =
                 new AsyncEventingBasicConsumer(channel);
-
+            //Slusam poruke
             consumer.ReceivedAsync += async (sender, ea) =>
             {
                 try
@@ -99,8 +99,6 @@ namespace OrganizacijaDogadjajaApp.DogadjajiAPI01.HostedServices
                         "saga.zavrsena");
 
 
-
-                    // LOGOVANJE
 
                     _logger.LogInformation(
                         "[SAGA {SagaId}] Saga uspesno zavrsena.",

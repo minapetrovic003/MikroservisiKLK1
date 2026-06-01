@@ -41,10 +41,7 @@ namespace OrganizacijaDogadjajaApp.SagaOrchestrator.Services
             _logger = logger;
         }
 
-        /// <summary>
-        /// Pokretanje Sage. Kreira SagaInstance i prolazi kroz sve korake.
-        /// Vraća ID kreirane Saga instance.
-        /// </summary>
+       
         public async Task<Guid> PokrniPrijavaAsync(Guid dogadjajId, Guid ucesnikId)
         {
             // 1. Kreiramo Saga instancu u bazi – odmah, pre bilo čega
@@ -66,9 +63,8 @@ namespace OrganizacijaDogadjajaApp.SagaOrchestrator.Services
 
             try
             {
-                // ============================================================
                 // KORAK 1: Rezerviši mesto na dogadjaju (DogadjajiAPI)
-                // ============================================================
+               
                 await AzurirajKorakAsync(saga, 1);
 
                 _logger.LogInformation("[SAGA KORAK 1] Rezervišem mesto. SagaId={SagaId}", saga.Id);
@@ -87,9 +83,8 @@ namespace OrganizacijaDogadjajaApp.SagaOrchestrator.Services
                 await _db.SaveChangesAsync();
                 _logger.LogInformation("[SAGA KORAK 1 OK] RezervacijaId={Id}. SagaId={SagaId}", rezervacijaId, saga.Id);
 
-                // ============================================================
+                
                 // KORAK 2: Kreiraj raspored predavanja (PredavanjaAPI)
-                // ============================================================
                 await AzurirajKorakAsync(saga, 2);
 
                 _logger.LogInformation("[SAGA KORAK 2] Kreiram raspored. SagaId={SagaId}", saga.Id);
@@ -110,9 +105,7 @@ namespace OrganizacijaDogadjajaApp.SagaOrchestrator.Services
                 await _db.SaveChangesAsync();
                 _logger.LogInformation("[SAGA KORAK 2 OK] RasporedId={Id}. SagaId={SagaId}", rasporedId, saga.Id);
 
-                // ============================================================
                 // KORAK 3: Potvrdi prijavu (UcesniciAPI)
-                // ============================================================
                 await AzurirajKorakAsync(saga, 3);
 
                 _logger.LogInformation("[SAGA KORAK 3] Potvrdjujem prijavu. SagaId={SagaId}", saga.Id);
@@ -131,9 +124,7 @@ namespace OrganizacijaDogadjajaApp.SagaOrchestrator.Services
 
                 saga.PrijavaId = prijavaId;
 
-                // ============================================================
                 // SVE USPEŠNO – Saga završena
-                // ============================================================
                 saga.Status = SagaStatus.Completed;
                 saga.CurrentStep = 3;
                 saga.AzuriranjaU = DateTime.UtcNow;

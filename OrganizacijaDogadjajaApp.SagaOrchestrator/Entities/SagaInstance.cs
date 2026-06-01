@@ -8,13 +8,10 @@
     {
         public Guid Id { get; set; }
 
-        // Koji korak je trenutno aktivan (1, 2, 3...)
         public int CurrentStep { get; set; }
 
-        // Ukupan status Sage: Running, Completed, Failed, Compensating, Compensated
         public string Status { get; set; } = SagaStatus.Running;
 
-        // Ulazni podaci – ID dogadjaja i ID ucesnika koji se prijavljuje
         public Guid DogadjajId { get; set; }
         public Guid UcesnikId { get; set; }
 
@@ -30,10 +27,7 @@
         public DateTime? AzuriranjaU { get; set; }
     }
 
-    /// <summary>
-    /// Konstante za status Sage – koristimo string umesto enum
-    /// jer je lakše čitati u bazi i logovima.
-    /// </summary>
+    
     public static class SagaStatus
     {
         public const string Running = "Running";           // Saga teče normalno

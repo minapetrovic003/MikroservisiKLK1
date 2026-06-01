@@ -14,6 +14,7 @@ using OrganizacijaDogadjajaApp.DogadjajiAPI.Services;
 using OrganizacijaDogadjajaApp.DogadjajiAPI01.HostedServices;
 using OrganizacijaDogadjajaApp.DogadjajiAPI01.Services;
 using RabbitMQ.Client;
+using OrganizacijaDogadjajaApp.DogadjajiAPI.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -117,6 +118,9 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
+//Middelwere
+app.UseQueryProtection();
 
 app.MapControllers();
 

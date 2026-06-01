@@ -5,11 +5,7 @@ using OrganizacijaDogadjajaApp.DogadjajiAPI.Models;
 
 namespace OrganizacijaDogadjajaApp.DogadjajiAPI.Controllers
 {
-    /// <summary>
-    /// Endpoint koji Saga Orchestrator poziva za rezervacije mesta.
-    /// ODVOJEN od glavnog DogadjajiController-a jer ima drugačiju logiku
-    /// (ne šalje Outbox event, već samo rezerviše mesto za Sagu).
-    /// </summary>
+   
     [ApiController]
     [Route("[controller]")]
     public class SagaRezervacijeController : ControllerBase
@@ -24,11 +20,8 @@ namespace OrganizacijaDogadjajaApp.DogadjajiAPI.Controllers
             _logger = logger;
         }
 
-        /// <summary>
+        
         /// POST /SagaRezervacije
-        /// Saga Orchestrator poziva ovaj endpoint da rezerviše mesto na dogadjaju.
-        /// Vraća ID rezervacije.
-        /// </summary>
         [HttpPost]
         public async Task<ActionResult<Guid>> Rezervisi([FromBody] SagaRezervacijaRequest request)
         {
