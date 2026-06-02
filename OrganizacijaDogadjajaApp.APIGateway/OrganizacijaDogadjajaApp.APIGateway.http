@@ -1,0 +1,6 @@
+@OrganizacijaDogadjajaApp.APIGateway_HostAddress = http://localhost:5052
+
+GET {{OrganizacijaDogadjajaApp.APIGateway_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

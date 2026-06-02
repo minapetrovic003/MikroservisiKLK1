@@ -1,0 +1,223 @@
+{
+  "Routes": [
+    {
+      "UpstreamHttpMethod": [ "Get" ],
+      "UpstreamPathTemplate": "/gateway/dogadjaji",
+      "DownstreamPathTemplate": "/api/dogadjaji",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7001
+        }
+      ],
+      "CacheOptions": {
+        "TtlSeconds": 30
+      },
+      "Key": "dogadjaji-list"
+    },
+    {
+      "UpstreamHttpMethod": [ "Get" ],
+      "UpstreamPathTemplate": "/gateway/dogadjaji/{id}",
+      "DownstreamPathTemplate": "/api/dogadjaji/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7001
+        }
+      ],
+      "CacheOptions": {
+        "TtlSeconds": 30
+      }
+    },
+    {
+      "UpstreamHttpMethod": [ "Post" ],
+      "UpstreamPathTemplate": "/gateway/dogadjaji",
+      "DownstreamPathTemplate": "/api/dogadjaji",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7001
+        }
+      ]
+    },
+    {
+      "UpstreamHttpMethod": [ "Put" ],
+      "UpstreamPathTemplate": "/gateway/dogadjaji/{id}",
+      "DownstreamPathTemplate": "/api/dogadjaji/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7001
+        }
+      ]
+    },
+    {
+      "UpstreamHttpMethod": [ "Delete" ],
+      "UpstreamPathTemplate": "/gateway/dogadjaji/{id}",
+      "DownstreamPathTemplate": "/api/dogadjaji/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7001
+        }
+      ]
+    },
+    {
+      "UpstreamHttpMethod": [ "Get" ],
+      "UpstreamPathTemplate": "/gateway/lokacije",
+      "DownstreamPathTemplate": "/api/lokacije",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7001
+        }
+      ],
+      "CacheOptions": {
+        "TtlSeconds": 60
+      }
+    },
+    {
+      "UpstreamHttpMethod": [ "Get" ],
+      "UpstreamPathTemplate": "/gateway/tipovi-dogadjaja",
+      "DownstreamPathTemplate": "/api/tipovdogadjaja",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7001
+        }
+      ],
+      "CacheOptions": {
+        "TtlSeconds": 60
+      }
+    },
+    {
+      "UpstreamHttpMethod": [ "Get" ],
+      "UpstreamPathTemplate": "/gateway/predavanja",
+      "DownstreamPathTemplate": "/api/predavanja",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7002
+        },
+        {
+          "Host": "localhost",
+          "Port": 7002
+        }
+      ],
+      "LoadBalancerOptions": {
+        "Type": "RoundRobin"
+      },
+      "CacheOptions": {
+        "TtlSeconds": 30
+      },
+      "Key": "predavanja-list"
+    },
+    {
+      "UpstreamHttpMethod": [ "Get" ],
+      "UpstreamPathTemplate": "/gateway/predavanja/{id}",
+      "DownstreamPathTemplate": "/api/predavanja/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7002
+        }
+      ],
+      "CacheOptions": {
+        "TtlSeconds": 30
+      }
+    },
+    {
+      "UpstreamHttpMethod": [ "Post" ],
+      "UpstreamPathTemplate": "/gateway/predavanja",
+      "DownstreamPathTemplate": "/api/predavanja",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7002
+        }
+      ]
+    },
+    {
+      "UpstreamHttpMethod": [ "Get" ],
+      "UpstreamPathTemplate": "/gateway/predavaci",
+      "DownstreamPathTemplate": "/api/predavaci",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7002
+        }
+      ],
+      "CacheOptions": {
+        "TtlSeconds": 60
+      }
+    },
+    {
+      "UpstreamHttpMethod": [ "Post" ],
+      "UpstreamPathTemplate": "/gateway/saga/prijava",
+      "DownstreamPathTemplate": "/api/prijavaorkestrar",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7004
+        }
+      ]
+    },
+    {
+      "UpstreamHttpMethod": [ "Get" ],
+      "UpstreamPathTemplate": "/gateway/dogadjaji-agg",
+      "DownstreamPathTemplate": "/api/dogadjaji",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7001
+        }
+      ],
+      "Key": "dogadjaji-agg"
+    },
+    {
+      "UpstreamHttpMethod": [ "Get" ],
+      "UpstreamPathTemplate": "/gateway/predavanja-agg",
+      "DownstreamPathTemplate": "/api/predavanja",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7002
+        }
+      ],
+      "Key": "predavanja-agg"
+    }
+  ],
+  "Aggregates": [
+    {
+      "UpstreamPathTemplate": "/gateway/pregled",
+      "RouteKeys": [ "dogadjaji-agg", "predavanja-agg" ]
+    }
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "https://localhost:7000",
+    "RateLimitOptions": {
+      "ClientIdHeader": "X-Client-Id",
+      "Limit": 20,
+      "Period": "30s",
+      "Wait": "1m",
+      "StatusCode": 429,
+      "QuotaMessage": "Prekoracen broj zahteva! Maksimalno {0} zahteva za {1}.",
+      "KeyPrefix": "gateway-rate-limit",
+      "RouteKeys": []
+    }
+  }
+}
