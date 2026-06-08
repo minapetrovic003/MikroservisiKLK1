@@ -1,5 +1,6 @@
 ﻿namespace OrganizacijaDogadjajaApp.DTO.EventSaga
 {
+    //Koreografija
     //UcesnicApi -> Kreirana je prijava
     public class PrijavaKreiranaEvent
     {

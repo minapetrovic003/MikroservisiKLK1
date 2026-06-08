@@ -8,6 +8,7 @@ namespace OrganizacijaDogadjajaApp.PredavanjaAPI.EventSourcing.Aggregates
 
         public Guid Id { get; protected set; }
 
+        // čuvanje događaja hronološkim redosledom
         public int Version { get; protected set; }
 
         public IReadOnlyCollection<EventBase> GetUncommittedChanges()
@@ -31,7 +32,7 @@ namespace OrganizacijaDogadjajaApp.PredavanjaAPI.EventSourcing.Aggregates
 
             _changes.Add(@event);
         }
-
+        //rekonstrukciju trenutnog stanja objekta na osnovu događaja
         public void ReplayEvents(IEnumerable<EventBase> events)
         {
             //rekonstrukcija stanja

@@ -4,12 +4,14 @@ using System.Text;
 using System.Text.Json;
 using OrganizacijaDogadjajaApp.DTO.EventSaga;
 using OrganizacijaDogadjajaApp.DogadjajiAPI01.Services;
+//Koreografija
 
 namespace OrganizacijaDogadjajaApp.DogadjajiAPI01.HostedServices
 {
     public class SagaCompletionHostedService : BackgroundService
     {
         private readonly ILogger<SagaCompletionHostedService> _logger;
+        //Pomocu logova smo evidentirali tok izvršavanja procesa
 
         private readonly IConnection _connection;
 

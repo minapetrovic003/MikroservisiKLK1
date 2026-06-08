@@ -3,6 +3,7 @@ using OrganizacijaDogadjajaApp.PredavanjaAPI.EventSourcing.Snapshots;
 
 namespace OrganizacijaDogadjajaApp.PredavanjaAPI.EventSourcing.Aggregates
 {
+    //poslovni entitet
     public class PredavanjeAggregate : AggregateRoot
     {
         //State -> ne moze direektno biti promenjen mora da prodje kroz klasu
@@ -87,6 +88,7 @@ namespace OrganizacijaDogadjajaApp.PredavanjaAPI.EventSourcing.Aggregates
 
         public void ChangeSala(string novaSala)
         {
+            //validaciju poslovnih pravila pre generisanja novih događaja
             if (Otkazano)
                 throw new Exception("Otkazano predavanje se ne može menjati.");
 

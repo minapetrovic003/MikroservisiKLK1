@@ -1,9 +1,10 @@
 {
   "Routes": [
     {
+      // 1. RUTIRANJE ZAHTEVA
       "UpstreamHttpMethod": [ "Get" ],
       "UpstreamPathTemplate": "/gateway/dogadjaji",
-      "DownstreamPathTemplate": "/api/dogadjaji",
+      "DownstreamPathTemplate": "/Dogadjaji",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -12,6 +13,7 @@
         }
       ],
       "CacheOptions": {
+        // 2. KEŠIRANJE ODGOVORA
         "TtlSeconds": 30
       },
       "Key": "dogadjaji-list"
@@ -19,7 +21,7 @@
     {
       "UpstreamHttpMethod": [ "Get" ],
       "UpstreamPathTemplate": "/gateway/dogadjaji/{id}",
-      "DownstreamPathTemplate": "/api/dogadjaji/{id}",
+      "DownstreamPathTemplate": "/Dogadjaji/{id}",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -34,7 +36,7 @@
     {
       "UpstreamHttpMethod": [ "Post" ],
       "UpstreamPathTemplate": "/gateway/dogadjaji",
-      "DownstreamPathTemplate": "/api/dogadjaji",
+      "DownstreamPathTemplate": "/Dogadjaji",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -46,7 +48,7 @@
     {
       "UpstreamHttpMethod": [ "Put" ],
       "UpstreamPathTemplate": "/gateway/dogadjaji/{id}",
-      "DownstreamPathTemplate": "/api/dogadjaji/{id}",
+      "DownstreamPathTemplate": "/Dogadjaji/{id}",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -58,7 +60,7 @@
     {
       "UpstreamHttpMethod": [ "Delete" ],
       "UpstreamPathTemplate": "/gateway/dogadjaji/{id}",
-      "DownstreamPathTemplate": "/api/dogadjaji/{id}",
+      "DownstreamPathTemplate": "/Dogadjaji/{id}",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -70,7 +72,7 @@
     {
       "UpstreamHttpMethod": [ "Get" ],
       "UpstreamPathTemplate": "/gateway/lokacije",
-      "DownstreamPathTemplate": "/api/lokacije",
+      "DownstreamPathTemplate": "/Lokacije",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -85,7 +87,7 @@
     {
       "UpstreamHttpMethod": [ "Get" ],
       "UpstreamPathTemplate": "/gateway/tipovi-dogadjaja",
-      "DownstreamPathTemplate": "/api/tipovdogadjaja",
+      "DownstreamPathTemplate": "/TipoviDogadjaja",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -100,7 +102,7 @@
     {
       "UpstreamHttpMethod": [ "Get" ],
       "UpstreamPathTemplate": "/gateway/predavanja",
-      "DownstreamPathTemplate": "/api/predavanja",
+      "DownstreamPathTemplate": "/Predavanja",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -113,6 +115,7 @@
         }
       ],
       "LoadBalancerOptions": {
+        // 3. LOAD BALANCING
         "Type": "RoundRobin"
       },
       "CacheOptions": {
@@ -123,7 +126,7 @@
     {
       "UpstreamHttpMethod": [ "Get" ],
       "UpstreamPathTemplate": "/gateway/predavanja/{id}",
-      "DownstreamPathTemplate": "/api/predavanja/{id}",
+      "DownstreamPathTemplate": "/Predavanja/{id}",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -138,7 +141,7 @@
     {
       "UpstreamHttpMethod": [ "Post" ],
       "UpstreamPathTemplate": "/gateway/predavanja",
-      "DownstreamPathTemplate": "/api/predavanja",
+      "DownstreamPathTemplate": "/Predavanja",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -150,7 +153,7 @@
     {
       "UpstreamHttpMethod": [ "Get" ],
       "UpstreamPathTemplate": "/gateway/predavaci",
-      "DownstreamPathTemplate": "/api/predavaci",
+      "DownstreamPathTemplate": "/Predavaci",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -163,21 +166,9 @@
       }
     },
     {
-      "UpstreamHttpMethod": [ "Post" ],
-      "UpstreamPathTemplate": "/gateway/saga/prijava",
-      "DownstreamPathTemplate": "/api/prijavaorkestrar",
-      "DownstreamScheme": "https",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 7004
-        }
-      ]
-    },
-    {
       "UpstreamHttpMethod": [ "Get" ],
       "UpstreamPathTemplate": "/gateway/dogadjaji-agg",
-      "DownstreamPathTemplate": "/api/dogadjaji",
+      "DownstreamPathTemplate": "/Dogadjaji",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -190,7 +181,7 @@
     {
       "UpstreamHttpMethod": [ "Get" ],
       "UpstreamPathTemplate": "/gateway/predavanja-agg",
-      "DownstreamPathTemplate": "/api/predavanja",
+      "DownstreamPathTemplate": "/Predavanja",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -201,23 +192,28 @@
       "Key": "predavanja-agg"
     }
   ],
+
   "Aggregates": [
     {
+      // 5. API KOMPOZICIJA (AGGREGATION)
       "UpstreamPathTemplate": "/gateway/pregled",
       "RouteKeys": [ "dogadjaji-agg", "predavanja-agg" ]
     }
   ],
+
   "GlobalConfiguration": {
     "BaseUrl": "https://localhost:7000",
+
+    // 4. RATE LIMITING I THROTTLING
     "RateLimitOptions": {
-      "ClientIdHeader": "X-Client-Id",
-      "Limit": 20,
+      "RouteKeys": [],
+      "ClientIdHeader": "Cookie",
+      "Limit": 8,
       "Period": "30s",
       "Wait": "1m",
       "StatusCode": 429,
       "QuotaMessage": "Prekoracen broj zahteva! Maksimalno {0} zahteva za {1}.",
-      "KeyPrefix": "gateway-rate-limit",
-      "RouteKeys": []
+      "KeyPrefix": "gateway-rate-limit"
     }
   }
 }

@@ -1,5 +1,6 @@
 ﻿namespace OrganizacijaDogadjajaApp.DTO.EventSaga
 {
+    //Koreografija
     //Pokrece konpezaciju
     //Ako nema mesta na predavanju -> faliur event
     public class RezervacijaPredavanjaNeuspelaEvent

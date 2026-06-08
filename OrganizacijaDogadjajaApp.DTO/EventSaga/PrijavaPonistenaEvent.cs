@@ -1,5 +1,7 @@
 ﻿namespace OrganizacijaDogadjajaApp.DTO.EventSaga
+    
 {
+    //Koreografija
     //Kompenzacioni event -> nije uspela prijava -> ucesniciApi brisu prijavu
     //Rollback
     public class PrijavaPonistenaEvent

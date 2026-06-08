@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using OrganizacijaDogadjajaApp.DTO.EventSaga;
 using OrganizacijaDogadjajaApp.PredavanjaAPI.Services;
+//Koreografija
 
 namespace OrganizacijaDogadjajaApp.PredavanjaAPI.HostedServices
 {

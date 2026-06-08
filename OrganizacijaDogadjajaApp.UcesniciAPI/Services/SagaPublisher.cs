@@ -1,6 +1,7 @@
 ﻿using RabbitMQ.Client;
 using System.Text;
 using System.Text.Json;
+//Koreografija
 
 namespace OrganizacijaDogadjajaApp.UcesniciAPI.Services
 {

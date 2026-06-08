@@ -1,5 +1,6 @@
 ﻿namespace OrganizacijaDogadjajaApp.UcesniciAPI.Services
 {
+    //Koreografija
     public interface ISagaPublisher //Sta publisher mora da zna da odradi
     {
         Task PublishAsync<T>(

@@ -16,7 +16,7 @@ namespace OrganizacijaDogadjajaApp.SagaOrchestrator.Services
     /// Kompenzacije (unazad ako nešto padne):
     ///   Korak 3 padne -> ništa da se kompenzuje (nije ništa kreirano)
     ///   Korak 2 padne -> kompenzuj Korak 1: otkaži rezervaciju
-    ///   Korak 3 padne -> kompenzuj Korak 2: obriši raspored
+    ///   Korak 1 padne -> kompenzuj Korak 2: obriši raspored
     ///                 -> kompenzuj Korak 1: otkaži rezervaciju
     /// </summary>
     public class PrijavaOrkestratorService

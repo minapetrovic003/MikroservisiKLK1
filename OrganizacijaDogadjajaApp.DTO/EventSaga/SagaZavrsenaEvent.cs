@@ -1,5 +1,6 @@
 ﻿namespace OrganizacijaDogadjajaApp.DTO.EventSaga
 {
+    //Koreografija
     //Final event -> Svi eventi uspesno zavrseni -> Saga gotova
     public class SagaZavrsenaEvent
     {

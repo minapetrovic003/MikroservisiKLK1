@@ -52,6 +52,7 @@ namespace OrganizacijaDogadjajaApp.APIGateway
             app.UseHttpsRedirection();
 
             var pipeline = new OcelotPipelineConfiguration
+            // 6. LOGGING & MONITORING
             {
                 AuthorizationMiddleware = async (context, next) =>
                 {
